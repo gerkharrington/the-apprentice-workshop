@@ -23,7 +23,7 @@
       font-family: Arial, sans-serif;
       overflow: hidden;
       background: #000000 url('assets/background.png') center center/cover no-repeat fixed;
-      color: white;
+      color: #FFFFFF;
     }
 
     h2 {
@@ -32,7 +32,7 @@
       font-size: 32px;
       font-weight: 600;
       line-height: 1.2;
-      color: white;
+      color: #FFFFFF;
 
     }
 
@@ -51,7 +51,7 @@
     .sidebar_main {
       width: 250px;
       background: #222;
-      color: white;
+      color: #FFFFFF;
       padding: 20px;
 
       display: flex;
@@ -90,7 +90,7 @@
       padding: 2px 8px;
       font-weight: bold;
       background: #883333;
-      color: white;
+      color: #FFFFFF;
       cursor: pointer;
       border: none;
     }
@@ -121,10 +121,51 @@
       resize: vertical;
     }
 
+    .editor_input_top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
     .editor_text {
       width: 100%;
       margin-bottom: 10px;
       resize: vertical;
+    }
+
+    .editor_icon {
+      display: none;
+    }
+
+    .editor_icon_upload {
+      width: 50px;
+      height: 50px;
+      position: relative;
+      cursor: pointer;
+      border: 1px dashed #aaa;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .editor_icon_upload.has_icon {
+      border: none;
+    }
+
+    .editor_icon_placeholder {
+      font-size: 20px;
+      color: #888;
+      user-select: none;
+    }
+
+    .editor_preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
     }
 
     /* ----------------------------- */
@@ -147,7 +188,17 @@
 
     <div id="editor_input" class="hidden">
 
-      <input id="single_role_name" class="editor_input" placeholder="Role Name" type="text">
+      <input id="single_role_icon" class="editor_icon" type="file" accept="image/*">
+
+      <div class="editor_input_top">
+
+        <div id="editor_icon_upload" class="editor_icon_upload">
+          <img id="editor_preview" class="editor_preview">
+          <span id="editor_icon_placeholder" class="editor_icon_placeholder">+</span>
+        </div>
+
+        <input id="single_role_name" class="editor_input" placeholder="Role Name" type="text">
+      </div>
 
       <textarea id="single_role_ability1" class="editor_text" placeholder="1st Ability"></textarea>
       <textarea id="single_role_ability2" class="editor_text" placeholder="2nd Ability (Optional)"></textarea>
@@ -162,13 +213,17 @@
     const element_single_role_name = document.getElementById("single_role_name");
     const element_single_role_ability1 = document.getElementById("single_role_ability1");
     const element_single_role_ability2 = document.getElementById("single_role_ability2");
+    const element_single_role_icon = document.getElementById("single_role_icon");
     const element_editor_input = document.getElementById("editor_input");
     const element_editor_empty = document.getElementById("editor_empty");
+    const element_editor_preview = document.getElementById("editor_preview");
+    const element_editor_icon_upload = document.getElementById("editor_icon_upload");
+    const element_editor_icon_placeholder = document.getElementById("editor_icon_placeholder");
     const element_sidebar_list = document.getElementById("sidebar_list");
     const element_sidebar_add = document.getElementById("sidebar_add");
 
     function data_roles_add() {
-      data_roles.push({ name: "Untitled Role", ability1: "", ability2: "" });
+      data_roles.push({ name: "Untitled Role", ability1: "", ability2: "", icon: "" });
       sidebar_selected = data_roles.length - 1;
       sidebar_render();
       data_roles_load();
@@ -186,6 +241,8 @@
           div.classList.add("selected");
         }
 
+        /* Create delete button */
+        /* ----------------------------- */
         const sidebar_delete = document.createElement("button");
         sidebar_delete.textContent = "-";
         sidebar_delete.classList.add("sidebar_delete");
@@ -205,18 +262,45 @@
           sidebar_render();
 
         };
+        /* ----------------------------- */
 
+        /* Create role icon */
+        /* ----------------------------- */
+        const container = document.createElement("div");
+        container.style.display = "flex";
+        container.style.alignItems = "center";
+        container.style.gap = "8px";
+
+        if (role.icon) {
+          const img = document.createElement("img");
+          img.src = role.icon;
+          img.style.width = "24px";
+          img.style.height = "24px";
+          img.style.objectFit = "cover";
+          img.style.borderRadius = "4px";
+          container.appendChild(img);
+        }
+        /* ----------------------------- */
+
+        /* Render everything together */
+        /* ----------------------------- */
         const name = document.createElement("span");
+
         name.textContent = role.name;
 
+        container.appendChild(name);
+
         div.appendChild(sidebar_delete);
+        div.appendChild(container);
         div.appendChild(name);
 
         div.onclick = () => {
+          /* Makes it clickable to select */
           sidebar_selected = index;
           sidebar_render();
           data_roles_load();
         };
+        /* ----------------------------- */
 
         list.appendChild(div);
       });
@@ -233,6 +317,17 @@
       element_single_role_ability1.value = role.ability1;
       element_single_role_ability2.value = role.ability2;
 
+      if (role.icon) {
+        /* We have an icon for this role */
+        element_editor_preview.src = role.icon;
+        element_editor_preview.style.display = "block";
+        element_editor_icon_upload.classList.add("has_icon");
+      } else {
+        /* We do not have an icon for this role */
+        element_editor_preview.style.display = "none";
+        element_editor_icon_upload.classList.remove("has_icon");
+      }
+
       element_editor_input.classList.remove("hidden");
       element_editor_empty.classList.add("hidden");
 
@@ -240,6 +335,7 @@
     function editor_clear() {
 
       element_single_role_name.value = "";
+      element_single_role_icon.value = "";
       element_single_role_ability1.value = "";
       element_single_role_ability2.value = "";
 
@@ -274,7 +370,31 @@
       sidebar_render();
     });
 
+    element_single_role_icon.addEventListener("change", function () {
+      if (sidebar_selected === null) return;
+
+      const file = this.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const icon = e.target.result;
+        data_roles[sidebar_selected].icon = icon;
+        element_editor_preview.src = icon;
+        element_editor_preview.style.display = "block";
+
+        element_editor_icon_upload.classList.add("has_icon");
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    /* Makes the "Add Role" button clickable to add a new role */
     element_sidebar_add.addEventListener("click", data_roles_add);
+
+    /* Makes the icon in the editor clickable to upload a different one */
+    element_editor_icon_upload.addEventListener("click", () => { element_single_role_icon.click(); });
 
     if (data_roles.length === 0) {
       editor_clear();
