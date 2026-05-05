@@ -17,7 +17,10 @@
       --white: #fff;
       --red: #7a0a0a;
       --light_red: #ae0e0e;
+
       --guest: #f8e71c;
+      --stranger: #bb11ee;
+      --spirit: #abddff;
 
       --radius_main: 8px;
       --radius_border: 2px;
@@ -28,6 +31,8 @@
       --margin_small: 8px;
       --margin_main: 10px;
       --margin_large: 16px;
+
+      --padding_main: 10px;
 
       --shrink: 0.96;
 
@@ -104,6 +109,17 @@
       animation: animation_blur_in var(--transition_long);
     }
 
+    select {
+      width: 150px;
+      height: 50px;
+      background: var(--very_dark_grey);
+      border: var(--radius_border) solid var(--dark_grey);
+      border-radius: var(--radius_main);
+      padding: var(--padding_main);
+      color: var(--white);
+      outline: none;
+    }
+
     input,
     textarea {
       width: 100%;
@@ -111,7 +127,7 @@
       background: var(--very_dark_grey);
       border: var(--radius_border) solid var(--dark_grey);
       border-radius: var(--radius_main);
-      padding: 10px;
+      padding: var(--padding_main);
       color: var(--white);
       outline: none;
       transition: var(--transition_short);
@@ -127,6 +143,7 @@
 
     input,
     textarea,
+    select,
     button {
       font-family: inherit;
       font-size: var(--size_small);
@@ -182,7 +199,7 @@
       cursor: pointer;
       align-items: center;
       gap: 10px;
-      padding: 8px 10px;
+      padding: 8px var(--padding_main);
       margin-bottom: var(--margin_small);
       border-radius: var(--radius_main);
       transition: transform var(--transition_short), background var(--transition_short), opacity var(--transition_short);
@@ -212,7 +229,7 @@
 
     .sidebar_add {
       margin: var(--margin_small) 0;
-      padding: 5px 10px;
+      padding: 5px var(--padding_main);
       cursor: pointer;
       border: none;
       background: var(--dark_grey);
@@ -232,7 +249,7 @@
 
     .sidebar_delete {
       margin: 0;
-      padding: 2px 8px;
+      padding: 2px var(--padding_main);
       background: var(--red);
       color: var(--white);
       cursor: pointer;
@@ -284,7 +301,7 @@
 
     .editor_empty {
       margin: var(--margin_small) 0;
-      padding: 10px 10px;
+      padding: var(--padding_main) var(--padding_main);
     }
 
     .editor_input {
@@ -378,6 +395,13 @@
         <label for="single_role_name" class="fake_hidden">Role Name Input</label>
         <input id="single_role_name" class="editor_input_name" placeholder="Untitled Role" type="text">
 
+        <!-- Role Type Input -->
+        <select id="single_role_type">
+          <option value="Guest">Guest</option>
+          <option value="Stranger">Stranger</option>
+          <option value="Spirit">Spirit</option>
+        </select>
+
       </div>
 
       <!-- Ability Text Inputs -->
@@ -398,6 +422,7 @@
     const element_single_role_ability1 = document.getElementById("single_role_ability1");
     const element_single_role_ability2 = document.getElementById("single_role_ability2");
     const element_single_role_icon = document.getElementById("single_role_icon");
+    const element_single_role_type = document.getElementById("single_role_type");
     const element_editor_input = document.getElementById("editor_input");
     const element_editor_empty = document.getElementById("editor_empty");
     const element_editor_icon_preview = document.getElementById("editor_icon_preview");
@@ -411,7 +436,20 @@
       const list = element_sidebar_list;
       list.innerHTML = "";
 
-      data_roles.forEach((role, index) => {
+      /* Hierarchy for sorting order */
+      const type_order = {
+        "Guest": 0,
+        "Stranger": 1,
+        "Spirit": 2
+      };
+
+      /* Sort roles based on hierarchy */
+      const sorted_roles = data_roles
+        .map((role, index) => ({ role, index }))
+        .sort((a, b) => type_order[a.role.type] - type_order[b.role.type]);
+
+      /* Start the for each loop, going through the sorted list one at a time */
+      sorted_roles.forEach(({ role, index }) => {
         const div = document.createElement("div");
         div.className = "sidebar_entry";
 
@@ -474,14 +512,15 @@
       });
     }
 
-    /* "Add new role function" for when the button is clicked */
+    /* -------------------[ Add New Role ]------------------- */
     function data_roles_add() {
-      data_roles.push({ name: "Untitled Role", ability1: "", ability2: "", icon: "" });
+      data_roles.push({ name: "Untitled Role", ability1: "", ability2: "", icon: "", type: "Guest" });
       sidebar_selected = data_roles.length - 1;
       sidebar_render();
       data_roles_load();
     }
 
+    /* -------------------[ Load Roles ]------------------- */
     function data_roles_load() {
       if (sidebar_selected === null) {
         editor_clear();
@@ -492,6 +531,7 @@
       element_single_role_name.value = role.name;
       element_single_role_ability1.value = role.ability1;
       element_single_role_ability2.value = role.ability2;
+      element_single_role_type.value = role.type || "Guest";
 
       editor_icon_update(role.icon);
 
@@ -503,6 +543,7 @@
       element_single_role_icon.value = "";
       element_single_role_ability1.value = "";
       element_single_role_ability2.value = "";
+      element_single_role_type.value = "Guest";
 
       element_editor_icon_preview.style.display = "none";
       element_editor_icon_preview.src = "";
@@ -562,6 +603,7 @@
       }
     }
 
+    /* Changing role name */
     element_single_role_name.addEventListener("input", function () {
       if (sidebar_selected === null) return;
       if (this.value.trim() === "") {
@@ -572,16 +614,19 @@
       sidebar_render();
     });
 
+    /* Changing ability 1 */
     element_single_role_ability1.addEventListener("input", function () {
       if (sidebar_selected === null) return;
       data_roles[sidebar_selected].ability1 = this.value;
     });
 
+    /* Changing ability 2 */
     element_single_role_ability2.addEventListener("input", function () {
       if (sidebar_selected === null) return;
       data_roles[sidebar_selected].ability2 = this.value;
     });
 
+    /* Changing image icon */
     element_single_role_icon.addEventListener("change", function () {
       if (sidebar_selected === null) return;
       const file = this.files[0];
@@ -590,6 +635,13 @@
         editor_icon_update(icon);
         sidebar_render();
       });
+    });
+
+    /* Changing role type */
+    element_single_role_type.addEventListener("change", function () {
+      if (sidebar_selected === null) return;
+      data_roles[sidebar_selected].type = this.value;
+      sidebar_render();
     });
 
     /* Makes the "Add Role" button clickable to add a new role */
