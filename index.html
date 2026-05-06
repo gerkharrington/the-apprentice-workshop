@@ -24,6 +24,10 @@
       --type_stranger: #bb11ee;
       --type_spirit: #abddff;
 
+      --type_guest_dark: #b1a414;
+      --type_stranger_dark: #7e0ba1;
+      --type_spirit_dark: #668498;
+
       --radius_main: 8px;
       --radius_border: 2px;
 
@@ -43,6 +47,7 @@
 
       /* This one will change based on which role is selected */
       --type_selected: var(--type_guest);
+      --type_selected_dark: var(--type_guest_dark);
     }
 
     /* -------------------[ Keyframe Animations ]------------------- */
@@ -115,7 +120,7 @@
     }
 
     select {
-      width: 150px;
+      min-width: 250px;
       height: 50px;
       background: var(--very_dark_grey);
       border: var(--radius_border) solid var(--dark_grey);
@@ -142,7 +147,7 @@
     input:focus,
     textarea:focus {
       border-color: var(--type_selected);
-      box-shadow: 0 0 0 var(--radius_border) color-mix(in srgb, var(--type_selected) 40%, transparent);
+      box-shadow: 0 0 0 var(--radius_border) var(--type_selected_dark);
       transform: translateY(-1px);
     }
 
@@ -404,6 +409,33 @@
       animation: animation_slide_up var(--transition_long);
     }
 
+    .editor_button {
+      margin: var(--margin_small) 0;
+      padding: 5px var(--padding_main);
+      cursor: pointer;
+      border: none;
+      background: var(--dark_grey);
+      color: var(--white);
+      border-radius: var(--radius_main);
+      transition: all var(--transition_short);
+      height: 50px;
+      width: 250px;
+    }
+
+    .editor_button:hover {
+      background: var(--light_grey);
+      transform: translateY(-1px);
+    }
+
+    .editor_button:active {
+      transform: scale(var(--shrink));
+    }
+
+    .editor_button.on {
+      background: var(--type_selected);
+      color: var(--black);
+    }
+
     .editor_empty {
       margin: var(--margin_small) 0;
       padding: var(--padding_main) var(--padding_main);
@@ -427,18 +459,18 @@
     }
 
     .editor_icon_upload {
-      flex: 0 0 50px;
-      width: 50px;
-      height: 50px;
+      flex: 0 0 108px;
+      width: 108px;
+      height: 108px;
       position: relative;
       cursor: pointer;
-      border: var(--radius_border) dashed var(--light_grey);
+      border: 8px dashed var(--dark_grey);
       border-radius: var(--radius_main);
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      transition: transform var(--transition_short), border var(--transition_short), box-shadow var(--transition_short);
+      transition: transform var(--transition_short), box-shadow var(--transition_short);
     }
 
     .editor_icon_upload:hover {
@@ -451,13 +483,13 @@
     }
 
     .editor_icon_placeholder {
-      font-size: var(--size_large);
+      font-size: 100px;
       color: var(--light_grey);
       user-select: none;
       line-height: 1;
       display: block;
-      /* A manual offset to the height to fix fonts being weird and lower than usual */
-      transform: translateY(-3px);
+      /* A manual offset to the height to fix fonts being weird and lower or higher than usual */
+      transform: translateY(-8px);
     }
 
     .editor_icon_preview {
@@ -466,6 +498,29 @@
       object-fit: cover;
       display: none;
       animation: animation_fade_in var(--transition_short);
+    }
+
+    .editor_input_top_right {
+      display: flex;
+      flex-direction: column;
+      gap: var(--margin_small);
+      flex: 1;
+    }
+
+    .editor_input_top_right_top {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .editor_format {
+      width: auto;
+      min-width: 250px;
+    }
+
+    .editor_input_top_right_bottom {
+      display: flex;
+      gap: var(--margin_small);
     }
 
     .editor_footer {
@@ -522,16 +577,29 @@
           <span id="editor_icon_placeholder" class="editor_icon_placeholder">+</span>
         </div>
 
-        <!-- Role Name Input -->
-        <label for="single_role_name" class="fake_hidden">Role Name Input</label>
-        <input id="single_role_name" class="editor_input_name" placeholder="Untitled Role" type="text">
+        <!-- Right Side (Next To Icon Upload)-->
+        <div class="editor_input_top_right">
 
-        <!-- Role Type Input -->
-        <select id="single_role_type">
-          <option value="Guest">Guest</option>
-          <option value="Stranger">Stranger</option>
-          <option value="Spirit">Spirit</option>
-        </select>
+          <!-- Right Side - Top Row -->
+          <div class="editor_input_top_right_top">
+            <!-- Role Icon Formatting Toggle -->
+            <button id="single_role_format" class="editor_format editor_button">Format Icon</button>
+          </div>
+
+          <!-- Right Side - Bottom Row -->
+          <div class="editor_input_top_right_bottom">
+            <!-- Role Name Input -->
+            <label for="single_role_name" class="fake_hidden">Role Name Input</label>
+            <input id="single_role_name" class="editor_input_name" placeholder="Untitled Role" type="text">
+            <!-- Role Type Input -->
+            <select id="single_role_type">
+              <option value="Guest">Guest</option>
+              <option value="Stranger">Stranger</option>
+              <option value="Spirit">Spirit</option>
+            </select>
+          </div>
+
+        </div>
 
       </div>
 
@@ -553,7 +621,21 @@
 
   <script>
     /* -------------------[ Site Data ]------------------- */
-    const site_version = "0.9.0";
+    const site_version = "0.10.0";
+
+    /* Calculate colours */
+    const colour_guest_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_guest').trim().replace('#', '');
+    const colour_guest = new Uint8Array([parseInt(colour_guest_hex.slice(0, 2), 16), parseInt(colour_guest_hex.slice(2, 4), 16), parseInt(colour_guest_hex.slice(4, 6), 16)]);
+    const colour_stranger_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_stranger').trim().replace('#', '');
+    const colour_stranger = new Uint8Array([parseInt(colour_stranger_hex.slice(0, 2), 16), parseInt(colour_stranger_hex.slice(2, 4), 16), parseInt(colour_stranger_hex.slice(4, 6), 16)]);
+    const colour_spirit_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_spirit').trim().replace('#', '');
+    const colour_spirit = new Uint8Array([parseInt(colour_spirit_hex.slice(0, 2), 16), parseInt(colour_spirit_hex.slice(2, 4), 16), parseInt(colour_spirit_hex.slice(4, 6), 16)]);
+    const colour_guest_dark_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_guest_dark').trim().replace('#', '');
+    const colour_guest_dark = new Uint8Array([parseInt(colour_guest_dark_hex.slice(0, 2), 16), parseInt(colour_guest_dark_hex.slice(2, 4), 16), parseInt(colour_guest_dark_hex.slice(4, 6), 16)]);
+    const colour_stranger_dark_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_stranger_dark').trim().replace('#', '');
+    const colour_stranger_dark = new Uint8Array([parseInt(colour_stranger_dark_hex.slice(0, 2), 16), parseInt(colour_stranger_dark_hex.slice(2, 4), 16), parseInt(colour_stranger_dark_hex.slice(4, 6), 16)]);
+    const colour_spirit_dark_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_spirit_dark').trim().replace('#', '');
+    const colour_spirit_dark = new Uint8Array([parseInt(colour_spirit_dark_hex.slice(0, 2), 16), parseInt(colour_spirit_dark_hex.slice(2, 4), 16), parseInt(colour_spirit_dark_hex.slice(4, 6), 16)]);
 
     /* -------------------[ General Variables ]------------------- */
     /* List of all roles */
@@ -568,6 +650,8 @@
       Stranger: false,
       Spirit: false
     };
+    /* Cache for role icons so they don't render jittery with formatting */
+    const data_roles_icon_cache = new Map();
 
     /* -------------------[ Cache Objects In Variables ]------------------- */
     const element_single_role_name = document.getElementById("single_role_name");
@@ -581,6 +665,7 @@
     const element_sidebar_import = document.getElementById("sidebar_import");
     const element_sidebar_export = document.getElementById("sidebar_export");
     const element_sidebar_import_file = document.getElementById("sidebar_import_file");
+    const element_single_role_format = document.getElementById("single_role_format");
     const element_editor_input = document.getElementById("editor_input");
     const element_editor_empty = document.getElementById("editor_empty");
     const element_editor_icon_preview = document.getElementById("editor_icon_preview");
@@ -669,9 +754,11 @@
           /* Add the role icon display */
           if (role.icon) {
             const icon = document.createElement("img");
-            icon.src = role.icon;
             icon.className = "sidebar_icon";
             icon.alt = "Role Icon";
+            data_roles_icon_get(role, (src) => {
+              if (src) icon.src = src;
+            });
             container.appendChild(icon);
           }
 
@@ -698,8 +785,7 @@
 
     /* -------------------[ Generate Unique UUID ]------------------- */
     function data_roles_uuid() {
-      return crypto.randomUUID ? crypto.randomUUID() :
-        'id_' + Math.random().toString(16).slice(2) + Date.now();
+      return crypto.randomUUID ? crypto.randomUUID() : 'id_' + Math.random().toString(16).slice(2) + Date.now();
     }
 
     /* -------------------[ Load From Local Storage ]------------------- */
@@ -736,6 +822,7 @@
           data_roles = parsed;
           sidebar_selected = data_roles.length ? data_roles[0].id : null;
           data_saved = false;
+          data_roles_icon_cache.clear();
           sidebar_render();
           sidebar_render_save();
           if (sidebar_selected) {
@@ -761,7 +848,8 @@
         ability1: "",
         ability2: "",
         icon: "",
-        type: default_role_type
+        type: default_role_type,
+        format: false
       });
       sidebar_selected = data_roles[data_roles.length - 1].id;
       sidebar_render();
@@ -776,13 +864,15 @@
       const on_transition_end = (e) => {
         if (e.propertyName !== "opacity") return;
         element.removeEventListener("transitionend", on_transition_end);
+        /* Store the index of the role we deleted */
+        const deleted = data_roles.findIndex(r => r.id === sidebar_selected);
         /* Properly delete the role after the animation plays */
         data_roles = data_roles.filter(r => r.id !== sidebar_selected);
         /* Select a new role */
         if (data_roles.length === 0) {
           sidebar_selected = null;
         } else {
-          sidebar_selected = data_roles[0].id;
+          sidebar_selected = data_roles[Math.max(0, deleted - 1)]?.id || data_roles[0].id;
         }
         /* Re-render and set some variables */
         sidebar_render();
@@ -805,6 +895,7 @@
       element_single_role_ability1.value = role.ability1;
       element_single_role_ability2.value = role.ability2;
       element_single_role_type.value = role.type || "Guest";
+      element_single_role_format.classList.toggle("on", role.format);
       editor_icon_update(role.icon);
       editor_set_visible(true);
       /* Update input and textarea highlight colour */
@@ -815,6 +906,13 @@
         colour = getComputedStyle(document.documentElement).getPropertyValue("--type_spirit").trim();
       }
       document.documentElement.style.setProperty("--type_selected", colour);
+      let colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_guest_dark").trim();
+      if (role.type === "Stranger") {
+        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_stranger_dark").trim();
+      } else if (role.type === "Spirit") {
+        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_spirit_dark").trim();
+      }
+      document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
     }
 
     /* -------------------[ Clear Editor For When No Roles Are There ]------------------- */
@@ -824,6 +922,7 @@
       element_single_role_ability1.value = "";
       element_single_role_ability2.value = "";
       element_single_role_type.value = "Guest";
+      element_single_role_format.classList.remove("on");
       element_editor_icon_preview.style.display = "none";
       element_editor_icon_preview.src = "";
       element_editor_icon_upload.classList.remove("has_icon");
@@ -866,19 +965,92 @@
 
     /* -------------------[ Show / Hide Stuff For Icon Upload ]------------------- */
     function editor_icon_update(icon) {
-      if (icon) {
-        /* We do have an icon */
-        element_editor_icon_preview.src = icon;
-        element_editor_icon_preview.style.display = "block";
-        element_editor_icon_placeholder.style.display = "none";
-        element_editor_icon_upload.classList.add("has_icon");
-      } else {
-        /* We do not have an icon */
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      /* Check if we don't have an icon */
+      if (!icon) {
         element_editor_icon_preview.src = "";
         element_editor_icon_preview.style.display = "none";
         element_editor_icon_placeholder.style.display = "block";
         element_editor_icon_upload.classList.remove("has_icon");
+        return;
       }
+      /* Format the icon */
+      if (role.format) {
+        data_roles_format(icon, role.type, (newIcon) => {
+          element_editor_icon_preview.src = newIcon;
+        });
+      } else {
+        element_editor_icon_preview.src = icon;
+      }
+      /* Display stuff */
+      element_editor_icon_preview.style.display = "block";
+      element_editor_icon_placeholder.style.display = "none";
+      element_editor_icon_upload.classList.add("has_icon");
+    }
+
+    /* -------------------[ Role Icon Formatting ]------------------- */
+    function data_roles_format(imageSrc, roleType, callback) {
+      const icon = new Image();
+      icon.crossOrigin = "anonymous";
+      icon.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = icon.width;
+        canvas.height = icon.height;
+        ctx.drawImage(icon, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        /* Role Colours */
+        let base;
+        if (roleType === "Stranger") base = colour_stranger;
+        else if (roleType === "Spirit") base = colour_spirit;
+        else base = colour_guest;
+        let base_dark;
+        if (roleType === "Stranger") base_dark = colour_stranger_dark;
+        else if (roleType === "Spirit") base_dark = colour_spirit_dark;
+        else base_dark = colour_guest_dark;
+        /* Start going through each pixel of the image */
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          /* Check if the pixel is transparent in any way (skip it) */
+          if (data[i + 3] < 255) {
+            data[i] = 0;
+            data[i + 1] = 0;
+            data[i + 2] = 0;
+            data[i + 3] = 0;
+            continue;
+          }
+          /* Calculate brightness. 0 = dark, 1 = light */
+          const brightness = (r + g + b) / (255 * 3);
+          const target = brightness > 0.55 ? base : base_dark;
+          data[i] = target[0];
+          data[i + 1] = target[1];
+          data[i + 2] = target[2];
+          data[i + 3] = 255;
+        }
+        ctx.putImageData(imageData, 0, 0);
+        callback(canvas.toDataURL());
+      };
+      icon.src = imageSrc;
+    }
+
+    /* -------------------[ Get Proper Icon (Formatted Or Not) ]------------------- */
+    function data_roles_icon_get(role, callback) {
+      if (!role.icon) return callback(null);
+      const key = role.id + "_" + role.format + "_" + role.type;
+      if (data_roles_icon_cache.has(key)) {
+        callback(data_roles_icon_cache.get(key));
+        return;
+      }
+      if (!role.format) {
+        callback(role.icon);
+        return;
+      }
+      data_roles_format(role.icon, role.type, (result) => {
+        data_roles_icon_cache.set(key, result);
+        callback(result);
+      });
     }
 
     /* -------------------[ Event Listeners ]------------------- */
@@ -937,7 +1109,16 @@
       if (sidebar_selected === null) return;
       const role = data_roles.find(r => r.id === sidebar_selected);
       if (!role) return;
+      /* Change the actual type value */
       role.type = this.value;
+      /* Clear formatted icon cache */
+      for (const key of data_roles_icon_cache.keys()) {
+        if (key.startsWith(role.id + "_")) {
+          data_roles_icon_cache.delete(key);
+        }
+      }
+      /* Update everything else */
+      editor_icon_update(role.icon);
       sidebar_render();
       data_saved = false;
       sidebar_render_save();
@@ -949,6 +1130,13 @@
         colour = getComputedStyle(document.documentElement).getPropertyValue("--type_spirit").trim();
       }
       document.documentElement.style.setProperty("--type_selected", colour);
+      let colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_guest_dark").trim();
+      if (role.type === "Stranger") {
+        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_stranger_dark").trim();
+      } else if (role.type === "Spirit") {
+        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_spirit_dark").trim();
+      }
+      document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
     });
 
     /* Makes the "Add Role" button clickable to add a new role */
@@ -977,6 +1165,19 @@
       const file = this.files[0];
       data_import(file);
       this.value = "";
+    });
+
+    /* Makes the button clickable to toggle role formatting */
+    element_single_role_format.addEventListener("click", function () {
+      if (sidebar_selected === null) return;
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.format = !role.format;
+      this.classList.toggle("on", role.format);
+      editor_icon_update(role.icon);
+      sidebar_render();
+      data_saved = false;
+      sidebar_render_save();
     });
 
     /* -------------------[ Drag & Drop Icons ]------------------- */
@@ -1036,7 +1237,7 @@
         if (element) {
           element.classList.add("removing");
         }
-        data_roles_delete();
+        data_roles_delete(element);
         return;
       }
     });
