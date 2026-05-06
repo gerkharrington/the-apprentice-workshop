@@ -1,5 +1,5 @@
 # The Apprentice Workshop
-⚒️ A site for creating custom The Grandest Party content.
+⚒️ A site for creating custom The Grandest Party content.\
 Create & export custom roles with an easy-to-use, all-in-one tool!
 
 https://gerkharrington.github.io/the-apprentice-workshop/
