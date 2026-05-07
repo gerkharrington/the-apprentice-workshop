@@ -35,7 +35,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 
 📤 Click the + button or drag and drop an image on to it to upload a role icon.\
 ⠀↳ Icons are automatically converted to ".webp" format and compressed slightly.\
-⠀↳ Uploaded icons are rescaled to fit 2048x2048 pixels size.\
+⠀↳ Uploaded icons are rescaled to fit 1024x1024 pixels size.\
 ⠀↳ Your image will be cropped around the middle if it isn't fully square.\
 🎨 Using the "Format Icon" button, your role icon will automatically be made to match The Grandest Party style.\
 ⠀⠀↳ Lighter pixels will be replaced with the role type's light colour.\
