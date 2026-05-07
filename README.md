@@ -14,6 +14,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 👉 The "Save" button will save your work in your browser, so you can come back later.\
 👉 When you're finished, export your work as a JSON file.\
 
+# More Info
 <details>
   <summary><b>Keyboard Shortcuts</b></summary>
   
@@ -42,4 +43,14 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 📤 Click the "Import" button to upload a ".json" file.\
 ⠀↳ This should be a file you or someone else has exported from this site.\
 ⠀↳ The new roles you load in will replace any existing ones. Make sure to export anything important first.\
+</details>
+
+<details>
+  <summary><b>Copyright Stuff</b></summary>
+
+🖇️ All rights are reserved for The Apprentice Workshop and all related code and assets.\
+⠀↳ The site code, while available, should not be distributed publicly, even if modified.\
+🤝 You hold all the rights for content you create using the site.\
+⠀↳ No license is applied to any content you create using the site.\
+⠀↳ Custom roles are stored locally on your computer and never uploaded to the cloud.\
 </details>
