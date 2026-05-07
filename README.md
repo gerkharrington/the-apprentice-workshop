@@ -40,6 +40,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⠀↳ This file contains all the information about your roles.\
 ⠀↳ With text editing software, you can manually change the contents of this file.\
 ⠀↳ Custom roles are stored locally on your computer and never uploaded to the cloud.\
+⠀↳ Note that if a role uses a formatted icon, only that version will be saved to the file.\
 📤 Click the "Import" button to upload a ".json" file.\
 ⠀↳ This should be a file you or someone else has exported from this site.\
 ⠀↳ The new roles you load in will replace any existing ones. Make sure to export anything important first.\
