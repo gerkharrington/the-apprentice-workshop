@@ -92,11 +92,13 @@
 
     @keyframes animation_fade_in {
       from {
+        transform: rotateY(90deg);
         transform: scale(0.5);
         opacity: 0;
       }
 
       to {
+        transform: rotateY(0deg);
         transform: scale(1);
         opacity: 1;
       }
@@ -135,7 +137,7 @@
     input,
     textarea {
       width: 100%;
-      resize: vertical;
+      resize: none;
       background: var(--very_dark_grey);
       border: var(--radius_border) solid var(--dark_grey);
       border-radius: var(--radius_main);
@@ -518,6 +520,25 @@
       gap: var(--margin_small);
     }
 
+    .editor_input_bottom {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: var(--margin_main);
+    }
+
+    .editor_ability_icon {
+      width: 50px;
+      height: 50px;
+    }
+
+    .editor_ability_icon_preview {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
     .editor_footer {
       position: fixed;
       bottom: 0;
@@ -599,9 +620,17 @@
       </div>
 
       <!-- Ability Text Inputs -->
-      <label for="single_role_ability1" class="fake_hidden">Ability 1 Text Input</label>
+      <!-- Ability 1 -->
+      <div class="editor_input_bottom">
+        <select id="single_role_ability1_type" class="editor_ability_icon"></select>
+        <img id="single_role_ability1_icon" class="editor_ability_icon_preview">
+      </div>
       <textarea id="single_role_ability1" class="editor_input" placeholder="1st Ability"></textarea>
-      <label for="single_role_ability2" class="fake_hidden">Ability 2 Text Input</label>
+      <!-- Ability 2 -->
+      <div class="editor_input_bottom">
+        <select id="single_role_ability2_type" class="editor_ability_icon"></select>
+        <img id="single_role_ability2_icon" class="editor_ability_icon_preview">
+      </div>
       <textarea id="single_role_ability2" class="editor_input" placeholder="2nd Ability (Optional)"></textarea>
 
     </div>
@@ -617,13 +646,41 @@
   <script>
     /* -------------------[ Site Data ]------------------- */
     /* Site version */
-    const site_version = "0.11.2";
+    const site_version = "0.12.0";
 
     /* Compression of images to save storage space */
     const site_compression = 0.8;
 
     /* Role type order */
     const sidebar_type_order = ["Guest", "Stranger", "Spirit"];
+
+    /* Ability icon order */
+    const editor_ability_icon_order = {
+      passive: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/passive.png?raw=true",
+      passive_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/passive_d.png?raw=true",
+      night: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night.png?raw=true",
+      night_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night_d.png?raw=true",
+      night_1: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night_1.png?raw=true",
+      night_2: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night_2.png?raw=true",
+      day: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day.png?raw=true",
+      day_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day_d.png?raw=true",
+      day_1: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day_1.png?raw=true",
+      day_2: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day_2.png?raw=true",
+    };
+
+    /* Ability icon names to display in the dropdown */
+    const editor_ability_icon_labels = {
+      passive: "Passive",
+      passive_d: "Passive (Even while dead)",
+      night: "Night",
+      night_d: "Night (Even while dead)",
+      night_1: "Night (1)",
+      night_2: "Night (2)",
+      day: "Day",
+      day_d: "Day (Even while dead)",
+      day_1: "Day (1)",
+      day_2: "Day (2)"
+    };
 
     /* Default role data */
     const site_roles_default = {
@@ -633,6 +690,8 @@
       name: "Untitled Role",
       ability1: "",
       ability2: "",
+      ability1_icon: "night",
+      ability2_icon: "night",
       icon: "",
       type: "Guest",
       format: false
@@ -672,6 +731,10 @@
     const element_single_role_name = document.getElementById("single_role_name");
     const element_single_role_ability1 = document.getElementById("single_role_ability1");
     const element_single_role_ability2 = document.getElementById("single_role_ability2");
+    const element_single_role_ability1_icon = document.getElementById("single_role_ability1_icon");
+    const element_single_role_ability2_icon = document.getElementById("single_role_ability2_icon");
+    const element_single_role_ability1_type = document.getElementById("single_role_ability1_type");
+    const element_single_role_ability2_type = document.getElementById("single_role_ability2_type");
     const element_single_role_icon = document.getElementById("single_role_icon");
     const element_single_role_type = document.getElementById("single_role_type");
     const element_sidebar_list = document.getElementById("sidebar_list");
@@ -831,6 +894,8 @@
               name: role.name,
               ability1: role.ability1,
               ability2: role.ability2,
+              ability1_icon: role.ability1_icon,
+              ability2_icon: role.ability2_icon,
               type: role.type,
               /* Load the regular icon here (if it exists) */
               icon: role.icon
@@ -845,6 +910,8 @@
               name: role.name,
               ability1: role.ability1,
               ability2: role.ability2,
+              ability1_icon: role.ability1_icon,
+              ability2_icon: role.ability2_icon,
               icon: formattedIcon,
               type: role.type
             });
@@ -951,6 +1018,10 @@
       element_single_role_name.value = role.name;
       element_single_role_ability1.value = role.ability1;
       element_single_role_ability2.value = role.ability2;
+      element_single_role_ability1_type.value = role.ability1_icon || "night";
+      element_single_role_ability2_type.value = role.ability2_icon || "night";
+      element_single_role_ability1_icon.src = editor_ability_icon_order[role.ability1_icon];
+      element_single_role_ability2_icon.src = editor_ability_icon_order[role.ability2_icon];
       element_single_role_type.value = role.type || "Guest";
       element_single_role_format.classList.toggle("on", role.format);
       editor_icon_update(role.icon);
@@ -1007,7 +1078,7 @@
         image.src = e.target.result;
         image.onload = function () {
           /* Define the size (widht / height) of the converted image */
-          const target_size = 2048;
+          const target_size = 1024;
           /* Create our canvas */
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
@@ -1056,6 +1127,17 @@
       element_editor_icon_preview.style.display = "block";
       element_editor_icon_placeholder.style.display = "none";
       element_editor_icon_upload.classList.add("has_icon");
+    }
+
+    /* -------------------[ Initiate Ability Icon Selector ]------------------- */
+    function editor_ability_icon_init(select) {
+      select.innerHTML = "";
+      Object.keys(editor_ability_icon_order).forEach(key => {
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = editor_ability_icon_labels[key] || key;
+        select.appendChild(opt);
+      });
     }
 
     /* -------------------[ Role Icon Formatting ]------------------- */
@@ -1222,6 +1304,24 @@
       document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
     });
 
+    /* Changing ability icons */
+    element_single_role_ability1_type.addEventListener("change", function () {
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.ability1_icon = this.value;
+      element_single_role_ability1_icon.src = editor_ability_icon_order[this.value];
+      data_saved = false;
+      sidebar_render_save();
+    });
+    element_single_role_ability2_type.addEventListener("change", function () {
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.ability2_icon = this.value;
+      element_single_role_ability2_icon.src = editor_ability_icon_order[this.value];
+      data_saved = false;
+      sidebar_render_save();
+    });
+
     /* Makes the "Add Role" button clickable to add a new role */
     element_sidebar_add.addEventListener("click", data_roles_add);
 
@@ -1359,6 +1459,8 @@
     /* Add the relevant data to the footer */
     element_editor_footer_year.textContent = new Date().getFullYear();
     element_editor_footer_version.textContent = site_version;
+    editor_ability_icon_init(element_single_role_ability1_type);
+    editor_ability_icon_init(element_single_role_ability2_type);
     data_storage_load();
     if (data_roles.length === 0) {
       editor_clear();
