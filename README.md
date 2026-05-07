@@ -27,7 +27,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⬆️ <b>Ctrl+Up</b>\
 ⠀↳ Moves the selected role a space upwards in the list.\
 ⬇️ <b>Ctrl+Down</b>\
-⠀↳ Moves the selected role a space downwards in the list.\
+⠀↳ Moves the selected role a space downwards in the list.
 </details>
 
 <details>
@@ -39,7 +39,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 🎨 Using the "Format Icon" button, your role icon will automatically be made to match The Grandest Party style.\
 ⠀⠀↳ Lighter pixels will be replaced with the role type's light colour.\
 ⠀⠀↳ Darker pixels will be replaced with the role type's dark colour.\
-⠀⠀↳ Pixels with any transparency will be fully removed.\
+⠀⠀↳ Pixels with any transparency will be fully removed.
 </details>
 
 <details>
@@ -52,7 +52,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⠀↳ Note that if a role uses a formatted icon, only that version will be saved to the file.\
 📤 Click the "Import" button to upload a ".json" file.\
 ⠀↳ This should be a file you or someone else has exported from this site.\
-⠀↳ The new roles you load in will replace any existing ones. Make sure to export anything important first.\
+⠀↳ The new roles you load in will replace any existing ones. Make sure to export anything important first.
 </details>
 
 <details>
@@ -64,5 +64,5 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 🤝 You hold all the rights for content you create using the site.\
 ⠀↳ No license is applied to any content you create using the site.\
 ⠀↳ Modifying default content included in the site does not give you rights for it. All rights are reserved for any content the site grants access to, including (but not limited to) art and text.\
-⠀↳ Custom roles are stored locally on your computer and never uploaded to the cloud.\
+⠀↳ Custom roles are stored locally on your computer and never uploaded to the cloud.
 </details>
