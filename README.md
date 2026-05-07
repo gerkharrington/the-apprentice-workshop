@@ -51,7 +51,9 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 
 🖇️ All rights are reserved for The Apprentice Workshop and all related code and assets.\
 ⠀↳ The site code, while available, should not be distributed publicly, even if modified.\
+⠀↳ All default content including (but not limited to) art and text included in the site is held under copyright.\
 🤝 You hold all the rights for content you create using the site.\
 ⠀↳ No license is applied to any content you create using the site.\
+⠀↳ Modifying default content included in the site does not give you rights for it. All rights are reserved for any content the site grants access to, including (but not limited to) art and text.\
 ⠀↳ Custom roles are stored locally on your computer and never uploaded to the cloud.\
 </details>
