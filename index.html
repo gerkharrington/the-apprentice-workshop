@@ -8,6 +8,7 @@
   <title>The Apprentice Workshop</title>
   <link rel="icon" type="image/x-icon"
     href="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/favicon.png?raw=true">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
 
   <style>
     /* -------------------[ Palette ]------------------- */
@@ -80,7 +81,7 @@
     @keyframes animation_slide_up {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(20px);
       }
 
       to {
@@ -91,7 +92,7 @@
 
     @keyframes animation_fade_in {
       from {
-        transform: scale(0.8);
+        transform: scale(0.5);
         opacity: 0;
       }
 
@@ -102,7 +103,7 @@
     }
 
     /* -------------------[ Default Styles ]------------------- */
-    /* Keeps everything on screen */
+    /* Include padding & border in element sizing for everything */
     * {
       box-sizing: border-box;
     }
@@ -111,8 +112,9 @@
     body {
       margin: 0;
       display: flex;
-      height: 100vh;
-      font-family: sans-serif;
+  min-height: 100dvh;
+  height: 100dvh;
+        font-family: sans-serif;
       overflow: hidden;
       background: var(--black);
       color: var(--white);
@@ -141,7 +143,6 @@
       color: var(--white);
       outline: none;
       transition: var(--transition_short);
-      backdrop-filter: blur(6px);
     }
 
     input:focus,
@@ -193,7 +194,6 @@
       padding: 20px;
       display: flex;
       flex-direction: column;
-      backdrop-filter: blur(10px);
       border-right: var(--radius_border) solid var(--dark_grey);
       animation: animation_slide_right var(--transition_long);
     }
@@ -296,7 +296,7 @@
       background: var(--dark_grey);
       color: var(--white);
       border-radius: var(--radius_main);
-      transition: all var(--transition_short);
+      transition: background var(--transition_short), transform var(--transition_short);
     }
 
     .sidebar_add:hover {
@@ -363,10 +363,6 @@
       border-radius: var(--radius_main);
     }
 
-    .sidebar_list::-webkit-scrollbar-thumb:hover {
-      background: var(--dark_grey);
-    }
-
     .sidebar_type {
       font-size: var(--size_small);
       text-transform: uppercase;
@@ -417,7 +413,7 @@
       background: var(--dark_grey);
       color: var(--white);
       border-radius: var(--radius_main);
-      transition: all var(--transition_short);
+      transition: background var(--transition_short), transform var(--transition_short);
       height: 50px;
       width: 250px;
     }
@@ -621,7 +617,27 @@
 
   <script>
     /* -------------------[ Site Data ]------------------- */
-    const site_version = "0.10.0";
+    /* Site version */
+    const site_version = "0.11.0";
+
+    /* Compression of images to save storage space */
+    const site_compression = 0.8;
+
+    /* Role type order */
+    const sidebar_type_order = ["Guest", "Stranger", "Spirit"];
+
+    /* Default role data */
+    const site_roles_default = {
+      /* id should never be left as default, always give each role a random id */
+      id: "",
+      /* Everything else here can be safely used as-is until the user modifies it */
+      name: "Untitled Role",
+      ability1: "",
+      ability2: "",
+      icon: "",
+      type: "Guest",
+      format: false
+    };
 
     /* Calculate colours */
     const colour_guest_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_guest').trim().replace('#', '');
@@ -689,7 +705,8 @@
       list.innerHTML = "";
 
       /* Hierarchy for role sorting */
-      const type_order = ["Guest", "Stranger", "Spirit"];
+      const type_order = sidebar_type_order;
+      data_roles_order();
 
       type_order.forEach(type => {
         const roles_of_type = data_roles
@@ -803,13 +820,47 @@
 
     /* -------------------[ Export As JSON ]------------------- */
     function data_export() {
-      const blob = new Blob([JSON.stringify(data_roles, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "roles.json";
-      a.click();
-      URL.revokeObjectURL(url);
+      /* Convert role data into usable objects */
+      const data_export_data = data_roles.map(role => {
+        return new Promise((resolve) => {
+          /* If there's no icon, or it's not being formatted, we just export normally */
+          if (!role.icon || !role.format) {
+            resolve({
+              /* Only keep the information from data_roles that we need */
+              /* Data not stored here will be loaded from site_roles_default */
+              name: role.name,
+              ability1: role.ability1,
+              ability2: role.ability2,
+              type: role.type,
+              /* Load the regular icon here (if it exists) */
+              icon: role.icon
+            });
+            return;
+          }
+          /* Format the icon (and export all other required data) */
+          data_roles_format(role.icon, role.type, (formattedIcon) => {
+            resolve({
+              /* Only keep the information from data_roles that we need */
+              /* Data not stored here will be loaded from site_roles_default */
+              name: role.name,
+              ability1: role.ability1,
+              ability2: role.ability2,
+              icon: formattedIcon,
+              type: role.type
+            });
+          });
+        });
+      });
+      /* Wait for the icon formatting to finish */
+      Promise.all(data_export_data).then((data_roles_export) => {
+        /* Make the JSON file */
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data_roles_export, null, 2)], { type: "application/json" }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "roles.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
     }
     /* -------------------[ Import From JSON ]------------------- */
     function data_import(file) {
@@ -817,9 +868,16 @@
       const sidebar_file_reader = new FileReader();
       sidebar_file_reader.onload = function (e) {
         try {
+          /* Convert JSON data to a readable object s*/
           const parsed = JSON.parse(e.target.result);
           if (!Array.isArray(parsed)) { return; }
-          data_roles = parsed;
+          /* Set all the data */
+          data_roles = parsed.map(role => ({
+            ...structuredClone(site_roles_default),
+            id: data_roles_uuid(),
+            ...role
+          }));
+          /* Load everything else (now role data is donw) */
           sidebar_selected = data_roles.length ? data_roles[0].id : null;
           data_saved = false;
           data_roles_icon_cache.clear();
@@ -843,13 +901,9 @@
       const default_role_type = sidebar_selected !== null ? (data_roles.find(r => r.id === sidebar_selected)?.type || "Guest") : "Guest";
       /* This adds the actual role with all default data */
       data_roles.push({
+        ...structuredClone(site_roles_default),
         id: data_roles_uuid(),
-        name: "Untitled Role",
-        ability1: "",
-        ability2: "",
-        icon: "",
-        type: default_role_type,
-        format: false
+        type: default_role_type
       });
       sidebar_selected = data_roles[data_roles.length - 1].id;
       sidebar_render();
@@ -937,28 +991,23 @@
 
     /* -------------------[ Handle File Reader For Image Upload ]------------------- */
     function editor_icon_upload(file, onSuccess) {
-      if (!file) {
-        alert("Failed to load file! Please try another file.\nError A-1: No file uploaded.");
-        return;
-      }
-      if (!file.type) {
-        alert("Failed to load file! Please try another file.\nError B-1: File type data not found.");
-        return;
-      }
-      if (!file.type.startsWith("image/")) {
-        alert("Failed to load file! Please try another file.\nError B-2: Not a valid image file type.");
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>2MB).");
-        return;
-      }
+      /* Initial error checks */
+      if (!file) { alert("Failed to load file! Please try another file.\nError A-1: No file uploaded."); return; }
+      if (!file.type) { alert("Failed to load file! Please try another file.\nError B-1: File type data not found."); return; }
+      if (!file.type.startsWith("image/")) { alert("Failed to load file! Please try another file.\nError B-2: Not a valid image file type."); return; }
+      if (file.size > 1024 * 1024) { alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>1MB)."); return; }
+      /* Create the file reader */
       const editor_file_reader = new FileReader();
       editor_file_reader.onload = function (e) {
+        /* Check image dimensions are square */
+        if (image.width !== image.height) { alert("Failed to load file! Please try another file.\nError B-5: Image dimensions are not square."); return; }
+        /* Do the stuff
+        /* (Most Helpful Comment Award: 2026) */
         onSuccess(e.target.result);
       };
+      /* File reader error message */
       editor_file_reader.onerror = function () {
-        alert("Failed to load file! Please try another file.\nError A-2: File reader error.");
+        alert("Failed to load file! Please try another file.\nError A-2: Unknown - browser failed to read file.");
       };
       editor_file_reader.readAsDataURL(file);
     }
@@ -1030,7 +1079,7 @@
           data[i + 3] = 255;
         }
         ctx.putImageData(imageData, 0, 0);
-        callback(canvas.toDataURL());
+        callback(canvas.toDataURL("image/webp", site_compression));
       };
       icon.src = imageSrc;
     }
@@ -1053,12 +1102,26 @@
       });
     }
 
+    /* -------------------[ Sort data_roles By Order ]------------------- */
+    function data_roles_order() {
+      const type_order = sidebar_type_order;
+      const result = [];
+      type_order.forEach(type => {
+        data_roles.forEach(role => {
+          if ((role.type || "Guest") === type) {
+            result.push(role);
+          }
+        });
+      });
+      data_roles = [...result];
+    }
+
     /* -------------------[ Event Listeners ]------------------- */
     /* Changing role name */
     element_single_role_name.addEventListener("input", function () {
       if (sidebar_selected === null) return;
       if (this.value.trim() === "") {
-        data_roles.find(r => r.id === sidebar_selected).name = "Untitled Role";
+        data_roles.find(r => r.id === sidebar_selected).name = site_roles_default.name;
       } else {
         const role = data_roles.find(r => r.id === sidebar_selected);
         if (!role) return;
@@ -1215,18 +1278,21 @@
     window.addEventListener("keydown", function (e) {
       /* Detect keys (Windows "Ctrl" and Mac "command") */
       const key_ctrl = e.ctrlKey || e.metaKey;
+
       /* Ctrl + S (Save data) */
       if (key_ctrl && e.key.toLowerCase() === "s") {
         e.preventDefault();
         element_sidebar_save.click();
         return;
       }
+
       /* Ctrl + Enter (Add new role) */
       if (key_ctrl && e.key.toLowerCase() === "enter") {
         e.preventDefault();
         data_roles_add();
         return;
       }
+
       /* Ctrl + Delete (Delete role) */
       if (key_ctrl && (e.key.toLowerCase() === "delete" || e.key.toLowerCase() === "backspace")) {
         e.preventDefault();
@@ -1240,6 +1306,33 @@
         data_roles_delete(element);
         return;
       }
+
+      /* Ctrl + Up (Move role upwards in list) */
+      if (key_ctrl && e.key.toLowerCase() === "arrowup") {
+        e.preventDefault();
+        if (sidebar_selected === null) return;
+        const index = data_roles.findIndex(r => r.id === sidebar_selected);
+        if (index <= 0) return;
+        [data_roles[index - 1], data_roles[index]] = [data_roles[index], data_roles[index - 1]];
+        sidebar_render();
+        data_saved = false;
+        sidebar_render_save();
+        return;
+      }
+
+      /* Ctrl + Down (Move role downwards in list) */
+      if (key_ctrl && e.key.toLowerCase() === "arrowdown") {
+        e.preventDefault();
+        if (sidebar_selected === null) return;
+        const index = data_roles.findIndex(r => r.id === sidebar_selected);
+        if (index === -1 || index >= data_roles.length - 1) return;
+        [data_roles[index + 1], data_roles[index]] = [data_roles[index], data_roles[index + 1]];
+        sidebar_render();
+        data_saved = false;
+        sidebar_render_save();
+        return;
+      }
+
     });
 
     /* -------------------[ Innitiate Editor (This Runs On Page Load) ]------------------- */
