@@ -465,7 +465,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
       transition: transform var(--transition_short), box-shadow var(--transition_short);
     }
 
@@ -618,7 +617,7 @@
   <script>
     /* -------------------[ Site Data ]------------------- */
     /* Site version */
-    const site_version = "0.11.1";
+    const site_version = "0.11.2";
 
     /* Compression of images to save storage space */
     const site_compression = 0.8;
@@ -872,7 +871,7 @@
           /* Convert JSON data to a readable object s*/
           const parsed = JSON.parse(e.target.result);
           if (!Array.isArray(parsed)) { return; }
-          if (parsed.length > 1000) {alert("Failed to load file! Please try another file.\nError B-5: Too many roles tried to load at once.");return;}
+          if (parsed.length > 1000) { alert("Failed to load file! Please try another file.\nError B-5: Too many roles tried to load at once."); return; }
           /* Set all the data */
           data_roles = parsed.map(role => ({
             /* Might swap to "structuredClone" instead of "JSON.parse(JSON.stringify" in the future */
@@ -1000,13 +999,31 @@
       if (!file.type) { alert("Failed to load file! Please try another file.\nError B-1: File type data not found."); return; }
       if (!file.type.startsWith("image/")) { alert("Failed to load file! Please try another file.\nError B-2: Not a valid image file type."); return; }
       if (file.size > 1024 * 1024) { alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>1MB)."); return; }
-      if (file.width !== file.height) { alert("Failed to load file! Please try another file.\nError B-5: Image dimensions are not square."); return; }
       /* Create the file reader */
       const editor_file_reader = new FileReader();
       editor_file_reader.onload = function (e) {
-        /* Do the stuff */
-        /* (Most Helpful Comment Award: 2026) */
-        onSuccess(e.target.result);
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.src = e.target.result;
+        image.onload = function () {
+          /* Define the size (widht / height) of the converted image */
+          const target_size = 2048;
+          /* Create our canvas */
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          canvas.width = target_size;
+          canvas.height = target_size;
+          /* Fill the background (important for transparency images) */
+          ctx.clearRect(0, 0, target_size, target_size);
+          /* Crop the image to square */
+          const size = Math.min(image.width, image.height);
+          const sx = (image.width - size) / 2;
+          const sy = (image.height - size) / 2;
+          /* Draw the image, scaled to target_size */
+          ctx.drawImage(image, sx, sy, size, size, 0, 0, target_size, target_size);
+          const croppedDataUrl = canvas.toDataURL("image/webp", site_compression);
+          onSuccess(croppedDataUrl);
+        }
       };
       /* File reader error message */
       editor_file_reader.onerror = function () {
@@ -1082,7 +1099,7 @@
           data[i + 3] = 255;
         }
         ctx.putImageData(imageData, 0, 0);
-        callback(canvas.toDataURL("image/webp", site_compression));
+        callback(canvas.toDataURL("image/webp"));
       };
       icon.src = imageSrc;
     }
