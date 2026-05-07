@@ -112,9 +112,9 @@
     body {
       margin: 0;
       display: flex;
-  min-height: 100dvh;
-  height: 100dvh;
-        font-family: sans-serif;
+      min-height: 100dvh;
+      height: 100dvh;
+      font-family: sans-serif;
       overflow: hidden;
       background: var(--black);
       color: var(--white);
@@ -455,9 +455,9 @@
     }
 
     .editor_icon_upload {
-      flex: 0 0 108px;
-      width: 108px;
-      height: 108px;
+      flex: 0 0 117px;
+      width: 117px;
+      height: 117px;
       position: relative;
       cursor: pointer;
       border: 8px dashed var(--dark_grey);
@@ -618,7 +618,7 @@
   <script>
     /* -------------------[ Site Data ]------------------- */
     /* Site version */
-    const site_version = "0.11.0";
+    const site_version = "0.11.1";
 
     /* Compression of images to save storage space */
     const site_compression = 0.8;
@@ -757,6 +757,7 @@
           /* Delete button for this role */
           const sidebar_delete = document.createElement("button");
           sidebar_delete.textContent = "-";
+          sidebar_delete.setAttribute("aria-label", "Delete Role");
           sidebar_delete.classList.add("sidebar_delete");
           sidebar_delete.onclick = (e) => {
             e.stopPropagation();
@@ -802,7 +803,7 @@
 
     /* -------------------[ Generate Unique UUID ]------------------- */
     function data_roles_uuid() {
-      return crypto.randomUUID ? crypto.randomUUID() : 'id_' + Math.random().toString(16).slice(2) + Date.now();
+      return window.crypto?.randomUUID ? window.crypto.randomUUID() : 'id_' + Math.random().toString(16).slice(2) + Date.now();
     }
 
     /* -------------------[ Load From Local Storage ]------------------- */
@@ -871,9 +872,11 @@
           /* Convert JSON data to a readable object s*/
           const parsed = JSON.parse(e.target.result);
           if (!Array.isArray(parsed)) { return; }
+          if (parsed.length > 1000) {alert("Failed to load file! Please try another file.\nError B-5: Too many roles tried to load at once.");return;}
           /* Set all the data */
           data_roles = parsed.map(role => ({
-            ...structuredClone(site_roles_default),
+            /* Might swap to "structuredClone" instead of "JSON.parse(JSON.stringify" in the future */
+            ...JSON.parse(JSON.stringify(site_roles_default)),
             id: data_roles_uuid(),
             ...role
           }));
@@ -901,7 +904,8 @@
       const default_role_type = sidebar_selected !== null ? (data_roles.find(r => r.id === sidebar_selected)?.type || "Guest") : "Guest";
       /* This adds the actual role with all default data */
       data_roles.push({
-        ...structuredClone(site_roles_default),
+        /* Might swap to "structuredClone" instead of "JSON.parse(JSON.stringify" in the future */
+        ...JSON.parse(JSON.stringify(site_roles_default)),
         id: data_roles_uuid(),
         type: default_role_type
       });
@@ -996,12 +1000,11 @@
       if (!file.type) { alert("Failed to load file! Please try another file.\nError B-1: File type data not found."); return; }
       if (!file.type.startsWith("image/")) { alert("Failed to load file! Please try another file.\nError B-2: Not a valid image file type."); return; }
       if (file.size > 1024 * 1024) { alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>1MB)."); return; }
+      if (file.width !== file.height) { alert("Failed to load file! Please try another file.\nError B-5: Image dimensions are not square."); return; }
       /* Create the file reader */
       const editor_file_reader = new FileReader();
       editor_file_reader.onload = function (e) {
-        /* Check image dimensions are square */
-        if (image.width !== image.height) { alert("Failed to load file! Please try another file.\nError B-5: Image dimensions are not square."); return; }
-        /* Do the stuff
+        /* Do the stuff */
         /* (Most Helpful Comment Award: 2026) */
         onSuccess(e.target.result);
       };
