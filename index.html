@@ -449,6 +449,17 @@
       margin-bottom: 0;
     }
 
+    .editor_input_wake {
+      height: 50px;
+      width: 250px;
+      margin-bottom: 0;
+    }
+
+    .editor_input_wake::-webkit-inner-spin-button,
+    .editor_input_wake::-webkit-outer-spin-button {
+      appearance: none;
+    }
+
     .editor_input_top {
       display: flex;
       align-items: center;
@@ -633,6 +644,9 @@
       </div>
       <textarea id="single_role_ability2" class="editor_input" placeholder="2nd Ability (Optional)"></textarea>
 
+      <!-- Wake Order Input -->
+      <input id="single_role_wake" class="editor_input_wake" placeholder="Wake Order Number" type="number">
+
     </div>
   </main>
 
@@ -646,7 +660,7 @@
   <script>
     /* -------------------[ Site Data ]------------------- */
     /* Site version */
-    const site_version = "0.12.0";
+    const site_version = "0.13.0";
 
     /* Compression of images to save storage space */
     const site_compression = 0.8;
@@ -656,6 +670,7 @@
 
     /* Ability icon order */
     const editor_ability_icon_order = {
+      none: "",
       passive: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/passive.png?raw=true",
       passive_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/passive_d.png?raw=true",
       night: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night.png?raw=true",
@@ -670,6 +685,7 @@
 
     /* Ability icon names to display in the dropdown */
     const editor_ability_icon_labels = {
+      none: "None",
       passive: "Passive",
       passive_d: "Passive (Even while dead)",
       night: "Night",
@@ -691,9 +707,10 @@
       ability1: "",
       ability2: "",
       ability1_icon: "night",
-      ability2_icon: "night",
+      ability2_icon: "none",
       icon: "",
       type: "Guest",
+      wake: "",
       format: false
     };
 
@@ -737,6 +754,7 @@
     const element_single_role_ability2_type = document.getElementById("single_role_ability2_type");
     const element_single_role_icon = document.getElementById("single_role_icon");
     const element_single_role_type = document.getElementById("single_role_type");
+    const element_single_role_wake = document.getElementById("single_role_wake");
     const element_sidebar_list = document.getElementById("sidebar_list");
     const element_sidebar_add = document.getElementById("sidebar_add");
     const element_sidebar_save = document.getElementById("sidebar_save");
@@ -892,11 +910,12 @@
               /* Only keep the information from data_roles that we need */
               /* Data not stored here will be loaded from site_roles_default */
               name: role.name,
+              type: role.type,
               ability1: role.ability1,
               ability2: role.ability2,
               ability1_icon: role.ability1_icon,
               ability2_icon: role.ability2_icon,
-              type: role.type,
+              wake: role.wake,
               /* Load the regular icon here (if it exists) */
               icon: role.icon
             });
@@ -908,12 +927,13 @@
               /* Only keep the information from data_roles that we need */
               /* Data not stored here will be loaded from site_roles_default */
               name: role.name,
+              type: role.type,
               ability1: role.ability1,
               ability2: role.ability2,
               ability1_icon: role.ability1_icon,
               ability2_icon: role.ability2_icon,
+              wake: role.wake,
               icon: formattedIcon,
-              type: role.type
             });
           });
         });
@@ -1016,6 +1036,7 @@
         return;
       }
       element_single_role_name.value = role.name;
+      element_single_role_wake.value = role.wake;
       element_single_role_ability1.value = role.ability1;
       element_single_role_ability2.value = role.ability2;
       element_single_role_ability1_type.value = role.ability1_icon || "night";
@@ -1230,6 +1251,16 @@
         role.name = this.value;
       }
       sidebar_render();
+      data_saved = false;
+      sidebar_render_save();
+    });
+
+    /* Changing wake order number */
+    element_single_role_wake.addEventListener("input", function () {
+      if (sidebar_selected === null) return;
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.wake = this.value;
       data_saved = false;
       sidebar_render_save();
     });
