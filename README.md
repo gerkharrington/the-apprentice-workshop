@@ -7,10 +7,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 # How It Works
 👉 Click "Add Role" to create a new role.\
 👉 You can freely modify the role's name, abilities, and type.\
-👉 Use the "Format Icon" button to auto-magically stylise the icon.\
-⠀⠀↳ Lighter pixels will be replaced with the role type's light colour.\
-⠀⠀↳ Darker pixels will be replaced with the role type's dark colour.\
-⠀⠀↳ Pixels with any transparency will be fully removed.\
+👉 Use the "Format Icon" button to auto-magically stylise the icon (more info below).\
 👉 The "Save" button will save your work in your browser, so you can come back later.\
 👉 When you're finished, export your work as a JSON file.\
 
@@ -31,6 +28,18 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⠀↳ Moves the selected role a space upwards in the list.\
 ⬇️ <b>Ctrl+Down</b>\
 ⠀↳ Moves the selected role a space downwards in the list.\
+</details>
+
+<details>
+  <summary><b>Icon Processing</b></summary>
+
+📤 Click the + button or drag and drop an image on to it to upload a role icon.\
+⠀↳ Icons are automatically converted to ".webp" format and compressed slightly.\
+⠀↳ Your image will be cropped around the middle if it isn't fully square.\
+🎨 Using the "Format Icon" button, your role icon will automatically be made to match The Grandest Party style.\
+⠀⠀↳ Lighter pixels will be replaced with the role type's light colour.\
+⠀⠀↳ Darker pixels will be replaced with the role type's dark colour.\
+⠀⠀↳ Pixels with any transparency will be fully removed.\
 </details>
 
 <details>
