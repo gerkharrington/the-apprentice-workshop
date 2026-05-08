@@ -27,7 +27,15 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⬆️ <b>Ctrl+Up</b>\
 ⠀↳ Moves the selected role a space upwards in the list.\
 ⬇️ <b>Ctrl+Down</b>\
-⠀↳ Moves the selected role a space downwards in the list.
+⠀↳ Moves the selected role a space downwards in the list.\
+📚 <b>Ctrl+D</b>\
+⠀↳ Duplicate the currently selected role.\
+📛 <b>Slash</b>\
+⠀↳ Quickly jump to the role name input area.\
+1️⃣ <b>Number 1</b>\
+⠀↳ Quickly jump to the ability 1 input area.\
+2️⃣ <b>Number 2</b>\
+⠀↳ Quickly jump to the ability 2 input area.
 </details>
 
 <details>
