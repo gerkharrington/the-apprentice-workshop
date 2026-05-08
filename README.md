@@ -9,7 +9,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 👉 You can freely modify the role's name, abilities, and type.\
 👉 Use the "Format Icon" button to auto-magically stylise the icon (more info below).\
 👉 The "Save" button will save your work in your browser, so you can come back later.\
-👉 When you're finished, export your work as a JSON file.\
+👉 When you're finished, export your work as a JSON file.
 
 # More Info
 <details>
