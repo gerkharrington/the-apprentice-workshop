@@ -24,6 +24,9 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⠀↳ Deletes the currently selected role, skipping the confirmation.\
 ⠀↳ This is useful for getting rid of lots of roles quickly.\
 ⠀↳ If you accidentally delete something, reload the page (so long as it hasn't been saved over).\
+🗑️ <b>Ctrl+Minus</b>\
+⠀↳ Deletes the icon from the currently selected role.\
+⠀↳ Can also be used to remove the icon from Project Details.\
 ⬆️ <b>Ctrl+Up</b>\
 ⠀↳ Moves the selected role a space upwards in the list.\
 ⬇️ <b>Ctrl+Down</b>\
