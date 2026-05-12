@@ -8,8 +8,10 @@
   <title>The Apprentice Workshop</title>
 
   <meta property="og:title" content="⚒️ The Apprentice Workshop" />
-  <meta property="og:description" content="A site for creating custom The Grandest Party content.\nCreate & export custom roles with an easy-to-use, all-in-one tool!" />
-  <meta property="og:image" content="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/favicon.png?raw=true" />
+  <meta property="og:description"
+    content="A site for creating custom The Grandest Party content. Create & export custom roles with an easy-to-use, all-in-one tool!" />
+  <meta property="og:image"
+    content="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/favicon.png?raw=true" />
   <meta property="og:url" content="https://gerkharrington.github.io/the-apprentice-workshop/" />
   <meta property="og:type" content="website" />
 
@@ -21,11 +23,13 @@
     /* -------------------[ Palette ]------------------- */
     :root {
 
+      --type_prompt: #ffffff;
       --type_item: #ffffff;
       --type_guest: #f8e71c;
       --type_stranger: #bb11ee;
       --type_spirit: #abddff;
 
+      --type_prompt_dark: #777777;
       --type_item_dark: #777777;
       --type_guest_dark: #b1a414;
       --type_stranger_dark: #7e0ba1;
@@ -34,8 +38,8 @@
       --black: #000000;
       --very_dark_grey: #181818;
       --dark_grey: #333333;
-      --light_grey: var(--type_item_dark);
-      --white: var(--type_item);
+      --light_grey: var(--type_prompt_dark);
+      --white: var(--type_prompt);
       --red: #7a0a0a;
       --light_red: #ae0e0e;
 
@@ -131,6 +135,7 @@
     img,
     button,
     footer,
+    span,
     h2 {
       user-select: none;
     }
@@ -263,6 +268,10 @@
       box-shadow: inset 0 0 0 2px var(--dark_grey);
     }
 
+    .sidebar_entry.sidebar_type_prompt.selected {
+      border-left: 6px solid var(--type_prompt);
+    }
+
     .sidebar_entry.sidebar_type_item.selected {
       border-left: 6px solid var(--type_item);
     }
@@ -302,6 +311,10 @@
 
     .sidebar_entry.selected::before {
       opacity: 0.18;
+    }
+
+    .sidebar_type_prompt::before {
+      background: linear-gradient(45deg, var(--type_prompt), transparent);
     }
 
     .sidebar_type_item::before {
@@ -479,6 +492,11 @@
       margin-bottom: 0;
     }
 
+    .editor_input_toplabel {
+      height: 50px;
+      margin-bottom: var(--margin_small);
+    }
+
     .editor_input_activate {
       height: 50px;
       width: 250px;
@@ -588,6 +606,43 @@
       /* Keeps this in front of everything */
       z-index: 9999;
     }
+
+    .editor_input_bottom_bottom {
+      display: flex;
+      align-items: center;
+      gap: var(--margin_main);
+      margin-bottom: var(--margin_main);
+    }
+
+    .editor_tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--margin_main);
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .editor_tag_icon {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex: 0 0 auto;
+      opacity: 0.33;
+      transition: opacity var(--transition_short), filter var(--transition_short), transform var(--transition_short);
+    }
+
+    .editor_tag input[type="checkbox"]:checked+.editor_tag_icon {
+      opacity: 1;
+    }
+
+    .editor_tag span {
+      color: var(--light_grey);
+      transition: color var(--transition_short);
+    }
+
+    .editor_tag input[type="checkbox"]:checked~span {
+      color: var(--white);
+    }
   </style>
 
 </head>
@@ -600,7 +655,7 @@
     <!-- The sidebar list itself -->
     <div id="sidebar_list" class="sidebar_list"></div>
     <!-- Add role button -->
-    <button id="sidebar_add" class="sidebar_add">+ Add Role</button>
+    <button id="sidebar_add" class="sidebar_add">+ Add Role / Card</button>
     <!-- Save button -->
     <button id="sidebar_save" class="sidebar_add">Save</button>
     <!-- The import / export row -->
@@ -643,13 +698,14 @@
           <div class="editor_input_top_right_bottom">
             <!-- Role Name Input -->
             <label for="single_role_name" class="fake_hidden">Role Name Input</label>
-            <input id="single_role_name" class="editor_input_name" placeholder="Untitled Role" type="text">
+            <input id="single_role_name" class="editor_input_name" placeholder="Untitled" type="text">
             <!-- Role Type Input -->
             <select id="single_role_type">
               <option value="Guest">Guest</option>
               <option value="Stranger">Stranger</option>
               <option value="Spirit">Spirit</option>
               <option value="Item">Item</option>
+              <option value="Prompt">Prompt</option>
             </select>
           </div>
 
@@ -657,7 +713,9 @@
 
       </div>
 
-      <!-- Ability Text Inputs -->
+      <textarea id="single_role_toplabel" class="editor_input_toplabel" placeholder="Win Condition / Prompt Card Label"></textarea>
+
+      <!-- Ability Inputs -->
       <!-- Ability 1 -->
       <div class="editor_input_bottom">
         <select id="single_role_ability1_type" class="editor_ability_icon"></select>
@@ -673,9 +731,35 @@
       </div>
       <textarea id="single_role_ability2" class="editor_input" placeholder="2nd Ability"></textarea>
 
-      <!-- Activate Order Number Input -->
-      <textarea id="single_role_activate" class="editor_input_activate" placeholder="Activate Order Number"></textarea>
+      <!-- Very Bottom Row -->
+      <div class="editor_input_bottom_bottom">
+        <!-- Activate Order Number Input -->
+        <textarea id="single_role_activate" class="editor_input_activate"
+          placeholder="Activate / Prompt Number"></textarea>
+        <!-- Role Tags -->
+        <label class="editor_tag">
+          <input id="single_role_tag_friendly" type="checkbox" class="hidden">
+          <img id="single_role_tag_friendly_icon"
+            src="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/tag_icons/friendly.png?raw=true"
+            class="editor_tag_icon">
+          <span>Friendly Guest Style</span>
+        </label>
+        <label class="editor_tag">
+          <input id="single_role_tag_setup" type="checkbox" class="hidden">
+          <img id="single_role_tag_setup_icon"
+            src="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/tag_icons/setup.png?raw=true"
+            class="editor_tag_icon">
+          <span>Affects Setup</span>
+        </label>
+        <label class="editor_tag">
+          <input id="single_role_tag_preserve" type="checkbox" class="hidden">
+          <img id="single_role_tag_preserve_icon"
+            src="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/tag_icons/preserve.png?raw=true"
+            class="editor_tag_icon">
+          <span>Preserves Game</span>
+        </label>
 
+      </div>
     </div>
   </main>
 
@@ -689,13 +773,10 @@
   <script>
     /* -------------------[ Site Data ]------------------- */
     /* Site version */
-    const site_version = "0.14.1";
-
-    /* Compression of images to save storage space */
-    const site_compression = 0.8;
+    const site_version = "0.15.0";
 
     /* Role type order */
-    const sidebar_type_order = ["Guest", "Stranger", "Spirit", "Item"];
+    const sidebar_type_order = ["Guest", "Stranger", "Spirit", "Item", "Prompt"];
 
     /* Ability icon order */
     const editor_ability_icon_order = {
@@ -732,17 +813,21 @@
       /* id should never be left as default, always give each role a random id */
       id: "",
       /* Everything else here can be safely used as-is until the user modifies it */
-      name: "Untitled Role",
+      name: "Untitled",
+      toplabel: "",
       ability1: "",
       ability2: "",
-      ability1_icon: "night",
+      ability1_icon: "none",
       ability2_icon: "none",
       ability1_name: "",
       ability2_name: "",
       icon: "",
       type: "Guest",
       activate: "",
-      format: false
+      format: false,
+      tag_friendly: false,
+      tag_setup: false,
+      tag_preserve: false
     };
 
     /* Calculate colours light */
@@ -754,6 +839,8 @@
     const colour_spirit = new Uint8Array([parseInt(colour_spirit_hex.slice(0, 2), 16), parseInt(colour_spirit_hex.slice(2, 4), 16), parseInt(colour_spirit_hex.slice(4, 6), 16)]);
     const colour_item_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_item').trim().replace('#', '');
     const colour_item = new Uint8Array([parseInt(colour_item_hex.slice(0, 2), 16), parseInt(colour_item_hex.slice(2, 4), 16), parseInt(colour_item_hex.slice(4, 6), 16)]);
+    const colour_prompt_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_prompt').trim().replace('#', '');
+    const colour_prompt = new Uint8Array([parseInt(colour_prompt_hex.slice(0, 2), 16), parseInt(colour_prompt_hex.slice(2, 4), 16), parseInt(colour_prompt_hex.slice(4, 6), 16)]);
     /* Calculate colours dark */
     const colour_guest_dark_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_guest_dark').trim().replace('#', '');
     const colour_guest_dark = new Uint8Array([parseInt(colour_guest_dark_hex.slice(0, 2), 16), parseInt(colour_guest_dark_hex.slice(2, 4), 16), parseInt(colour_guest_dark_hex.slice(4, 6), 16)]);
@@ -763,6 +850,8 @@
     const colour_spirit_dark = new Uint8Array([parseInt(colour_spirit_dark_hex.slice(0, 2), 16), parseInt(colour_spirit_dark_hex.slice(2, 4), 16), parseInt(colour_spirit_dark_hex.slice(4, 6), 16)]);
     const colour_item_dark_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_item_dark').trim().replace('#', '');
     const colour_item_dark = new Uint8Array([parseInt(colour_item_dark_hex.slice(0, 2), 16), parseInt(colour_item_dark_hex.slice(2, 4), 16), parseInt(colour_item_dark_hex.slice(4, 6), 16)]);
+    const colour_prompt_dark_hex = getComputedStyle(document.documentElement).getPropertyValue('--type_prompt_dark').trim().replace('#', '');
+    const colour_prompt_dark = new Uint8Array([parseInt(colour_prompt_dark_hex.slice(0, 2), 16), parseInt(colour_prompt_dark_hex.slice(2, 4), 16), parseInt(colour_prompt_dark_hex.slice(4, 6), 16)]);
 
     /* -------------------[ General Variables ]------------------- */
     /* List of all roles */
@@ -776,13 +865,15 @@
       Guest: false,
       Stranger: false,
       Spirit: false,
-      Item: false
+      Item: false,
+      Prompt: false
     };
     /* Cache for role icons so they don't render jittery with formatting */
     const data_roles_icon_cache = new Map();
 
     /* -------------------[ Cache Objects In Variables ]------------------- */
     const element_single_role_name = document.getElementById("single_role_name");
+    const element_single_role_toplabel = document.getElementById("single_role_toplabel");
     const element_single_role_ability1 = document.getElementById("single_role_ability1");
     const element_single_role_ability2 = document.getElementById("single_role_ability2");
     const element_single_role_ability1_icon = document.getElementById("single_role_ability1_icon");
@@ -794,6 +885,9 @@
     const element_single_role_icon = document.getElementById("single_role_icon");
     const element_single_role_type = document.getElementById("single_role_type");
     const element_single_role_activate = document.getElementById("single_role_activate");
+    const element_single_role_tag_friendly = document.getElementById("single_role_tag_friendly");
+    const element_single_role_tag_setup = document.getElementById("single_role_tag_setup");
+    const element_single_role_tag_preserve = document.getElementById("single_role_tag_preserve");
     const element_sidebar_list = document.getElementById("sidebar_list");
     const element_sidebar_add = document.getElementById("sidebar_add");
     const element_sidebar_save = document.getElementById("sidebar_save");
@@ -940,48 +1034,38 @@
 
     /* -------------------[ Export As JSON ]------------------- */
     function data_export() {
+      /* Creates the object to be included in the export */
+      function create_export_role(role, icon_override = role.icon) {
+        const export_role = {};
+        /* Go through each piece of data to see if we need it exported (name, ability1, etc) */
+        Object.keys(site_roles_default).forEach((key) => {
+          /* Never export these pieces of information, they are not about the role itself and only used to help the editor function */
+          if (key === "id" || key === "format") return;
+          /* Get the formatted version of the icon, if needed */
+          const value = key === "icon" ? icon_override : role[key];
+          /* Compare with site_roles_default (we only need to export values that are not the default (ie, they have been changed by the user)) */
+          if (value === site_roles_default[key]) return;
+          /* If all checks pass, this is a value we will export */
+          export_role[key] = value;
+        });
+        return export_role;
+      }
       /* Convert role data into usable objects */
       const data_export_data = data_roles.map(role => {
+        /* Get the correct value for exporting the icon */
         return new Promise((resolve) => {
-          /* If there's no icon, or it's not being formatted, we just export normally */
+          /* If there's no icon, or it's not being formatted, export normally */
           if (!role.icon || !role.format) {
-            resolve({
-              /* Only keep the information from data_roles that we need */
-              /* Data not stored here will be loaded from site_roles_default */
-              name: role.name,
-              type: role.type,
-              ability1_name: role.ability1_name,
-              ability1_icon: role.ability1_icon,
-              ability1: role.ability1,
-              ability2_name: role.ability2_name,
-              ability2_icon: role.ability2_icon,
-              ability2: role.ability2,
-              activate: role.activate,
-              /* Load the regular icon here (if it exists) */
-              icon: role.icon
-            });
+            resolve(create_export_role(role));
             return;
           }
-          /* Format the icon (and export all other required data) */
+          /* Otherwise, format the icon before exporting */
           data_roles_format(role.icon, role.type, (formattedIcon) => {
-            resolve({
-              /* Only keep the information from data_roles that we need */
-              /* Data not stored here will be loaded from site_roles_default */
-              name: role.name,
-              type: role.type,
-              ability1_name: role.ability1_name,
-              ability1_icon: role.ability1_icon,
-              ability1: role.ability1,
-              ability2_name: role.ability2_name,
-              ability2_icon: role.ability2_icon,
-              ability2: role.ability2,
-              activate: role.activate,
-              icon: formattedIcon,
-            });
+            resolve(create_export_role(role, formattedIcon));
           });
         });
       });
-      /* Wait for the icon formatting to finish */
+      /* Wait for icon formatting to finish */
       Promise.all(data_export_data).then((data_roles_export) => {
         /* Make the JSON file */
         const url = URL.createObjectURL(new Blob([JSON.stringify(data_roles_export, null, 2)], { type: "application/json" }));
@@ -992,6 +1076,7 @@
         URL.revokeObjectURL(url);
       });
     }
+
     /* -------------------[ Import From JSON ]------------------- */
     function data_import(file) {
       if (!file) return;
@@ -1079,6 +1164,7 @@
         return;
       }
       element_single_role_name.value = role.name;
+      element_single_role_toplabel.value = role.toplabel;
       element_single_role_activate.value = role.activate;
       element_single_role_ability1.value = role.ability1;
       element_single_role_ability2.value = role.ability2;
@@ -1089,6 +1175,9 @@
       element_single_role_ability1_name.value = role.ability1_name;
       element_single_role_ability2_name.value = role.ability2_name;
       element_single_role_type.value = role.type || "Guest";
+      element_single_role_tag_friendly.checked = role.tag_friendly;
+      element_single_role_tag_setup.checked = role.tag_setup;
+      element_single_role_tag_preserve.checked = role.tag_preserve;
       element_single_role_format.classList.toggle("on", role.format);
       editor_icon_update(role.icon);
       editor_set_visible(true);
@@ -1100,6 +1189,8 @@
         colour = getComputedStyle(document.documentElement).getPropertyValue("--type_spirit").trim();
       } else if (role.type === "Item") {
         colour = getComputedStyle(document.documentElement).getPropertyValue("--type_item").trim();
+      } else if (role.type === "Prompt") {
+        colour = getComputedStyle(document.documentElement).getPropertyValue("--type_prompt").trim();
       }
       document.documentElement.style.setProperty("--type_selected", colour);
       let colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_guest_dark").trim();
@@ -1109,6 +1200,8 @@
         colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_spirit_dark").trim();
       } else if (role.type === "Item") {
         colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_item_dark").trim();
+      } else if (role.type === "Prompt") {
+        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_item_dark").trim();
       }
       document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
       editor_enable_check();
@@ -1117,12 +1210,16 @@
     /* -------------------[ Clear Editor For When No Roles Are There ]------------------- */
     function editor_clear() {
       element_single_role_name.value = "";
+      element_single_role_toplabel.value = "";
       element_single_role_icon.value = "";
       element_single_role_ability1.value = "";
       element_single_role_ability2.value = "";
       element_single_role_type.value = "Guest";
       element_single_role_ability1_name.value = "";
       element_single_role_ability2_name.value = "";
+      element_single_role_tag_friendly.checked = false;
+      element_single_role_tag_setup.checked = false;
+      element_single_role_tag_preserve.checked = false;
       element_single_role_format.classList.remove("on");
       element_editor_icon_preview.style.display = "none";
       element_editor_icon_preview.src = "";
@@ -1142,7 +1239,7 @@
       if (!file) { alert("Failed to load file! Please try another file.\nError A-1: No file uploaded."); return; }
       if (!file.type) { alert("Failed to load file! Please try another file.\nError B-1: File type data not found."); return; }
       if (!file.type.startsWith("image/")) { alert("Failed to load file! Please try another file.\nError B-2: Not a valid image file type."); return; }
-      if (file.size > 1024 * 1024) { alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>1MB)."); return; }
+      if (file.size > 4 * 1024 * 1024) { alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>4MB)."); return; }
       /* Create the file reader */
       const editor_file_reader = new FileReader();
       editor_file_reader.onload = function (e) {
@@ -1166,7 +1263,7 @@
           const sy = (image.height - size) / 2;
           /* Draw the image, scaled to target_size */
           ctx.drawImage(image, sx, sy, size, size, 0, 0, target_size, target_size);
-          const croppedDataUrl = canvas.toDataURL("image/webp", site_compression);
+          const croppedDataUrl = canvas.toDataURL("image/webp");
           onSuccess(croppedDataUrl);
         }
       };
@@ -1218,19 +1315,22 @@
     function editor_enable_check() {
       const role = data_roles.find(r => r.id === sidebar_selected);
       if (!role) return;
-      /* Save some values */
+      /* Role type */
       const is_item = role.type === "Item";
+      const is_prompt = role.type === "Prompt";
+      const is_stranger = role.type === "Stranger";
+      /* Disable ability text if type is set to "none" */
       const is_ability1_none = element_single_role_ability1_type.value === "none";
       const is_ability2_none = element_single_role_ability2_type.value === "none";
       /* Disable ability icons for items */
-      const ability1_icon_disabled = is_item;
-      const ability2_icon_disabled = is_item;
+      const ability1_icon_disabled = is_item || is_prompt;
+      const ability2_icon_disabled = is_item || is_prompt;
       /* Disable text inputs if icon is set to "none" and it's possible to change */
       const ability1_disabled = !ability1_icon_disabled && is_ability1_none;
       const ability2_disabled = !ability2_icon_disabled && is_ability2_none;
       /* Apply disabled & enabled states */
-      element_single_role_ability1.disabled = ability1_disabled;
-      element_single_role_ability2.disabled = ability2_disabled;
+      element_single_role_ability1.disabled = ability1_disabled || is_prompt;
+      element_single_role_ability2.disabled = ability2_disabled || is_prompt;
       element_single_role_ability1_type.disabled = ability1_icon_disabled;
       element_single_role_ability2_type.disabled = ability2_icon_disabled;
       element_single_role_ability1_icon.classList.toggle("disabled", ability1_icon_disabled || is_ability1_none);
@@ -1238,6 +1338,14 @@
       element_single_role_ability1_name.disabled = ability1_icon_disabled || is_ability1_none;
       element_single_role_ability2_name.disabled = ability2_icon_disabled || is_ability2_none;
       element_single_role_activate.disabled = is_item;
+      element_single_role_toplabel.disabled = !(is_stranger || is_prompt);
+      /* Role tags */
+      element_single_role_tag_friendly.disabled = is_item || is_prompt;
+      element_single_role_tag_setup.disabled = is_item || is_prompt;
+      element_single_role_tag_preserve.disabled = is_item || is_prompt;
+      element_single_role_tag_friendly.classList.toggle("disabled", is_item || is_prompt);
+      element_single_role_tag_setup.classList.toggle("disabled", is_item || is_prompt);
+      element_single_role_tag_preserve.classList.toggle("disabled", is_item || is_prompt);
     }
 
     /* -------------------[ Role Icon Formatting ]------------------- */
@@ -1340,6 +1448,16 @@
       const role = data_roles.find(r => r.id === sidebar_selected);
       if (!role) return;
       role.activate = this.value;
+      data_saved = false;
+      sidebar_render_save();
+    });
+
+    /* Changing win condition */
+    element_single_role_toplabel.addEventListener("input", function () {
+      if (sidebar_selected === null) return;
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.toplabel = this.value;
       data_saved = false;
       sidebar_render_save();
     });
@@ -1457,6 +1575,29 @@
       const role = data_roles.find(r => r.id === sidebar_selected);
       if (!role) return;
       role.ability2_name = this.value;
+      data_saved = false;
+      sidebar_render_save();
+    });
+
+    /* Changing role tags */
+    element_single_role_tag_friendly.addEventListener("change", function () {
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.tag_friendly = this.checked;
+      data_saved = false;
+      sidebar_render_save();
+    });
+    element_single_role_tag_setup.addEventListener("change", function () {
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.tag_setup = this.checked;
+      data_saved = false;
+      sidebar_render_save();
+    });
+    element_single_role_tag_preserve.addEventListener("change", function () {
+      const role = data_roles.find(r => r.id === sidebar_selected);
+      if (!role) return;
+      role.tag_preserve = this.checked;
       data_saved = false;
       sidebar_render_save();
     });
