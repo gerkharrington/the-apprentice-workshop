@@ -6,18 +6,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Apprentice Workshop</title>
+  <link rel="icon" type="image/x-icon"
+    href="https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
 
+  <!-- Discord embed -->
   <meta property="og:title" content="⚒️ The Apprentice Workshop" />
   <meta property="og:description"
     content="A site for creating custom The Grandest Party content. Create & export custom roles with an easy-to-use, all-in-one tool!" />
   <meta property="og:image"
-    content="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/favicon.png?raw=true" />
+    content="https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/favicon.png" />
   <meta property="og:url" content="https://gerkharrington.github.io/the-apprentice-workshop/" />
   <meta property="og:type" content="website" />
-
-  <link rel="icon" type="image/x-icon"
-    href="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/favicon.png?raw=true">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
 
   <style>
     /* -------------------[ Palette ]------------------- */
@@ -46,6 +46,8 @@
       --radius_main: 8px;
       --radius_border: 2px;
 
+      --height_main: 50px;
+
       --size_large: 32px;
       --size_small: 16px;
 
@@ -63,6 +65,14 @@
       /* This one will change based on which role is selected */
       --type_selected: var(--type_guest);
       --type_selected_dark: var(--type_guest_dark);
+    }
+
+    /* -------------------[ Fonts ]------------------- */
+    @font-face {
+      font-family: 'TGPHeader-Regular';
+      src: url('https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/font/TGPHeader-Regular.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
     }
 
     /* -------------------[ Keyframe Animations ]------------------- */
@@ -117,9 +127,10 @@
     }
 
     /* -------------------[ Default Styles ]------------------- */
-    /* Include padding & border in element sizing for everything */
+    /* Include padding & border in element sizing for everything (and default font)*/
     * {
       box-sizing: border-box;
+      font-family: sans-serif;
     }
 
     /* Grey things out if disabled */
@@ -146,7 +157,6 @@
       display: flex;
       min-height: 100dvh;
       height: 100dvh;
-      font-family: sans-serif;
       overflow: hidden;
       background: var(--black);
       color: var(--white);
@@ -170,7 +180,7 @@
     select {
       min-width: 250px;
       max-width: 250px;
-      height: 50px;
+      height: var(--height_main);
     }
 
     input:focus,
@@ -194,6 +204,7 @@
       font-size: var(--size_large);
       line-height: 1.2;
       color: var(--white);
+      font-family: 'TGPHeader-Regular', sans-serif;
     }
 
     /* -------------------[ Hidden Elements ]------------------- */
@@ -459,7 +470,7 @@
       color: var(--white);
       border-radius: var(--radius_main);
       transition: background var(--transition_short), transform var(--transition_short);
-      height: 50px;
+      height: var(--height_main);
       width: 250px;
     }
 
@@ -488,17 +499,18 @@
     }
 
     .editor_input_name {
-      height: 50px;
+      height: var(--height_main);
       margin-bottom: 0;
+      font-family: 'TGPHeader-Regular', sans-serif;
     }
 
     .editor_input_toplabel {
-      height: 50px;
+      height: var(--height_main);
       margin-bottom: var(--margin_small);
     }
 
     .editor_input_activate {
-      height: 50px;
+      height: var(--height_main);
       width: 250px;
       margin-bottom: 0;
     }
@@ -537,7 +549,6 @@
       font-size: 100px;
       color: var(--light_grey);
       user-select: none;
-      line-height: 1;
       display: block;
       /* A manual offset to the height to fix fonts being weird and lower or higher than usual */
       transform: translateY(-8px);
@@ -582,12 +593,12 @@
     }
 
     .editor_ability_icon {
-      width: 50px;
+      width: var(--height_main);
       height: 50px;
     }
 
     .editor_ability_icon_preview {
-      width: 50px;
+      width: var(--height_main);
       height: 50px;
       object-fit: contain;
       flex: 0 0 auto;
@@ -650,9 +661,8 @@
 <body>
 
   <aside class="sidebar_main">
-    <!-- Header text -->
-    <h2>Roles</h2>
     <!-- The sidebar list itself -->
+    <button id="sidebar_project" class="sidebar_add">Project Details</button>
     <div id="sidebar_list" class="sidebar_list"></div>
     <!-- Add role button -->
     <button id="sidebar_add" class="sidebar_add">+ Add Role / Card</button>
@@ -670,7 +680,21 @@
   <main class="editor_main">
     <h2>The Apprentice Workshop</h2>
 
-    <p id="editor_empty" class="editor_empty">Click "Add Role" to begin workshopping!</p>
+    <!-- Project Metadata Page -->
+    <div id="editor_project" class="hidden">
+      <input id="editor_project_icon_input" class="fake_hidden" type="file" accept="image/*">
+      <div class="editor_input_top">
+        <div id="editor_project_icon_upload" class="editor_icon_upload">
+          <img id="editor_project_icon_preview" class="editor_icon_preview" alt="Project icon">
+          <span id="editor_project_icon_placeholder" class="editor_icon_placeholder">+</span>
+        </div>
+        <div class="editor_input_top_right">
+          <input id="editor_project_name" class="editor_input_name" type="text" placeholder="Project Name">
+          <input id="editor_project_author" class="editor_input_name" type="text" placeholder="Project Author">
+        </div>
+      </div>
+      <textarea id="editor_project_description" class="editor_input" placeholder="Project Description"></textarea>
+    </div>
 
     <div id="editor_input" class="hidden">
 
@@ -713,7 +737,8 @@
 
       </div>
 
-      <textarea id="single_role_toplabel" class="editor_input_toplabel" placeholder="Win Condition / Prompt Card Label"></textarea>
+      <textarea id="single_role_toplabel" class="editor_input_toplabel"
+        placeholder="Win Condition / Prompt Card Label"></textarea>
 
       <!-- Ability Inputs -->
       <!-- Ability 1 -->
@@ -740,21 +765,21 @@
         <label class="editor_tag">
           <input id="single_role_tag_friendly" type="checkbox" class="hidden">
           <img id="single_role_tag_friendly_icon"
-            src="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/tag_icons/friendly.png?raw=true"
+            src="https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/tag_icons/friendly.png"
             class="editor_tag_icon">
           <span>Friendly Guest Style</span>
         </label>
         <label class="editor_tag">
           <input id="single_role_tag_setup" type="checkbox" class="hidden">
           <img id="single_role_tag_setup_icon"
-            src="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/tag_icons/setup.png?raw=true"
+            src="https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/tag_icons/setup.png"
             class="editor_tag_icon">
           <span>Affects Setup</span>
         </label>
         <label class="editor_tag">
           <input id="single_role_tag_preserve" type="checkbox" class="hidden">
           <img id="single_role_tag_preserve_icon"
-            src="https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/tag_icons/preserve.png?raw=true"
+            src="https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/tag_icons/preserve.png"
             class="editor_tag_icon">
           <span>Preserves Game</span>
         </label>
@@ -773,24 +798,24 @@
   <script>
     /* -------------------[ Site Data ]------------------- */
     /* Site version */
-    const site_version = "0.15.0";
+    const site_version = "0.16.0";
 
     /* Role type order */
     const sidebar_type_order = ["Guest", "Stranger", "Spirit", "Item", "Prompt"];
 
     /* Ability icon order */
     const editor_ability_icon_order = {
-      none: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/none.png?raw=true",
-      passive: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/passive.png?raw=true",
-      passive_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/passive_d.png?raw=true",
-      night: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night.png?raw=true",
-      night_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night_d.png?raw=true",
-      night_1: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night_1.png?raw=true",
-      night_2: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/night_2.png?raw=true",
-      day: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day.png?raw=true",
-      day_d: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day_d.png?raw=true",
-      day_1: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day_1.png?raw=true",
-      day_2: "https://github.com/gerkharrington/the-apprentice-workshop/blob/main/assets/ability_icons/day_2.png?raw=true",
+      none: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/none.png",
+      passive: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/passive.png",
+      passive_d: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/passive_d.png",
+      night: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/night.png",
+      night_d: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/night_d.png",
+      night_1: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/night_1.png",
+      night_2: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/night_2.png",
+      day: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/day.png",
+      day_d: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/day_d.png",
+      day_1: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/day_1.png",
+      day_2: "https://raw.githubusercontent.com/gerkharrington/the-apprentice-workshop/main/assets/ability_icons/day_2.png",
     };
 
     /* Ability icon names to display in the dropdown */
@@ -807,6 +832,14 @@
       day_1: "Day (1)",
       day_2: "Day (2)"
     };
+
+    /* Default project data */
+    const site_project_default = {
+      name: "Untitled",
+      author: "",
+      icon: "",
+      description: ""
+    }
 
     /* Default role data */
     const site_roles_default = {
@@ -856,8 +889,11 @@
     /* -------------------[ General Variables ]------------------- */
     /* List of all roles */
     let data_roles = [];
+    /* Project metadata */
+    let data_project = site_project_default;
     /* Role selected to be edited right now */
     let sidebar_selected = null;
+    let sidebar_mode = "role";
     /* Whether our data is up-to-date with local storage */
     let data_saved = false;
     /* Variable for collapsing role type sections */
@@ -889,6 +925,7 @@
     const element_single_role_tag_setup = document.getElementById("single_role_tag_setup");
     const element_single_role_tag_preserve = document.getElementById("single_role_tag_preserve");
     const element_sidebar_list = document.getElementById("sidebar_list");
+    const element_sidebar_project = document.getElementById("sidebar_project");
     const element_sidebar_add = document.getElementById("sidebar_add");
     const element_sidebar_save = document.getElementById("sidebar_save");
     const element_sidebar_import = document.getElementById("sidebar_import");
@@ -896,12 +933,19 @@
     const element_sidebar_import_file = document.getElementById("sidebar_import_file");
     const element_single_role_format = document.getElementById("single_role_format");
     const element_editor_input = document.getElementById("editor_input");
-    const element_editor_empty = document.getElementById("editor_empty");
     const element_editor_icon_preview = document.getElementById("editor_icon_preview");
     const element_editor_icon_upload = document.getElementById("editor_icon_upload");
     const element_editor_icon_placeholder = document.getElementById("editor_icon_placeholder");
     const element_editor_footer_year = document.getElementById("editor_footer_year");
     const element_editor_footer_version = document.getElementById("editor_footer_version");
+    const element_editor_project = document.getElementById("editor_project");
+    const element_editor_project_name = document.getElementById("editor_project_name");
+    const element_editor_project_author = document.getElementById("editor_project_author");
+    const element_editor_project_description = document.getElementById("editor_project_description");
+    const element_editor_project_icon_input = document.getElementById("editor_project_icon_input");
+    const element_editor_project_icon_upload = document.getElementById("editor_project_icon_upload");
+    const element_editor_project_icon_preview = document.getElementById("editor_project_icon_preview");
+    const element_editor_project_icon_placeholder = document.getElementById("editor_project_icon_placeholder");
 
     /* -------------------[ Update Save Button Text ]------------------- */
     function sidebar_render_save() {
@@ -916,6 +960,8 @@
     function sidebar_render() {
       const list = element_sidebar_list;
       list.innerHTML = "";
+
+      element_sidebar_project.classList.toggle("on", sidebar_mode === "project");
 
       /* Hierarchy for role sorting */
       const type_order = sidebar_type_order;
@@ -1004,6 +1050,8 @@
 
           /* Click this line to select this role */
           div.onclick = () => {
+            sidebar_mode = "role";
+            element_editor_project.classList.add("hidden");
             sidebar_selected = role.id;
             sidebar_render();
             data_roles_load();
@@ -1025,7 +1073,13 @@
       data_saved = true;
       if (saved) {
         try {
-          data_roles = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            data_roles = parsed;
+          } else {
+            data_roles = parsed.roles || [];
+            data_project = parsed.project || data_project;
+          }
         } catch (e) {
           data_roles = [];
         }
@@ -1065,13 +1119,24 @@
           });
         });
       });
+      /* Compare with site_project_default (we only need to export values that are not the default (ie, they have been changed by the user)) */
+      function create_export_project(project) {
+        const export_project = {};
+        Object.keys(site_project_default).forEach((key) => {
+          const value = project[key];
+          if (value === site_project_default[key]) return;
+          export_project[key] = value;
+        });
+        return export_project;
+      }
       /* Wait for icon formatting to finish */
       Promise.all(data_export_data).then((data_roles_export) => {
+        const project_export = create_export_project(data_project);
         /* Make the JSON file */
-        const url = URL.createObjectURL(new Blob([JSON.stringify(data_roles_export, null, 2)], { type: "application/json" }));
+        const url = URL.createObjectURL(new Blob([JSON.stringify({ project: project_export, roles: data_roles_export }, null, 2)], { type: "application/json" }));
         const a = document.createElement("a");
         a.href = url;
-        a.download = "roles.json";
+        a.download = `${(data_project.name || "untitled").trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, "")}.json`;
         a.click();
         URL.revokeObjectURL(url);
       });
@@ -1085,26 +1150,33 @@
         try {
           /* Convert JSON data to a readable object s*/
           const parsed = JSON.parse(e.target.result);
-          if (!Array.isArray(parsed)) { return; }
-          if (parsed.length > 1000) { alert("Failed to load file! Please try another file.\nError B-5: Too many roles tried to load at once."); return; }
+          let imported_roles = parsed;
+          let imported_project = {};
+          if (!Array.isArray(parsed)) {
+            imported_roles = parsed.roles || [];
+            imported_project = parsed.project || {};
+          }
+          if (!Array.isArray(imported_roles)) {
+            return;
+          }
+          if (imported_roles.length > 1000) { alert("Failed to load file! Please try another file.\nError B-5: Too many roles tried to load at once."); return; }
           /* Set all the data */
-          data_roles = parsed.map(role => ({
+          data_roles = imported_roles.map(role => ({
             /* Might swap to "structuredClone" instead of "JSON.parse(JSON.stringify" in the future */
             ...JSON.parse(JSON.stringify(site_roles_default)),
             id: data_roles_uuid(),
             ...role
           }));
+          data_project =
+            JSON.parse(JSON.stringify({
+              ...site_project_default,
+              ...imported_project
+            }));
           /* Load everything else (now role data is donw) */
-          sidebar_selected = data_roles.length ? data_roles[0].id : null;
-          data_saved = false;
+          editor_unsaved();
           data_roles_icon_cache.clear();
           sidebar_render();
-          sidebar_render_save();
-          if (sidebar_selected) {
-            data_roles_load();
-          } else {
-            editor_clear();
-          }
+          editor_project_open();
         } catch (err) {
           alert("Failed to load file! Please try another file.\nError B-4: File JSON is invalid.");
         }
@@ -1112,10 +1184,15 @@
       sidebar_file_reader.readAsText(file);
     }
 
+    /* -------------------[ Get Selected Role ]------------------- */
+    function data_roles_get() {
+      return data_roles.find(r => r.id === sidebar_selected);
+    }
+
     /* -------------------[ Add New Role ]------------------- */
     function data_roles_add() {
       /* Choose what type the role will be created as (guest by default) */
-      const default_role_type = sidebar_selected !== null ? (data_roles.find(r => r.id === sidebar_selected)?.type || "Guest") : "Guest";
+      const default_role_type = sidebar_selected !== null ? (data_roles_get()?.type || "Guest") : "Guest";
       /* This adds the actual role with all default data */
       data_roles.push({
         /* Might swap to "structuredClone" instead of "JSON.parse(JSON.stringify" in the future */
@@ -1123,10 +1200,11 @@
         id: data_roles_uuid(),
         type: default_role_type
       });
+      sidebar_mode = "role";
       sidebar_selected = data_roles[data_roles.length - 1].id;
+      element_editor_project.classList.add("hidden");
       sidebar_render();
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
       data_roles_load();
     }
 
@@ -1143,14 +1221,16 @@
         /* Select a new role */
         if (data_roles.length === 0) {
           sidebar_selected = null;
+          editor_project_open();
         } else {
           sidebar_selected = data_roles[Math.max(0, deleted - 1)]?.id || data_roles[0].id;
         }
         /* Re-render and set some variables */
         sidebar_render();
-        data_saved = false;
-        sidebar_render_save();
-        data_roles_load();
+        editor_unsaved();
+        if (sidebar_selected) {
+          data_roles_load();
+        }
       };
       element.addEventListener("transitionend", on_transition_end);
       element.classList.add("removing");
@@ -1158,9 +1238,9 @@
 
     /* -------------------[ Load Roles ]------------------- */
     function data_roles_load() {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) {
-        editor_clear();
+        editor_project_open();
         return;
       }
       element_single_role_name.value = role.name;
@@ -1201,36 +1281,63 @@
       } else if (role.type === "Item") {
         colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_item_dark").trim();
       } else if (role.type === "Prompt") {
-        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_item_dark").trim();
+        colour_dark = getComputedStyle(document.documentElement).getPropertyValue("--type_prompt_dark").trim();
       }
       document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
       editor_enable_check();
     }
 
-    /* -------------------[ Clear Editor For When No Roles Are There ]------------------- */
-    function editor_clear() {
-      element_single_role_name.value = "";
-      element_single_role_toplabel.value = "";
-      element_single_role_icon.value = "";
-      element_single_role_ability1.value = "";
-      element_single_role_ability2.value = "";
-      element_single_role_type.value = "Guest";
-      element_single_role_ability1_name.value = "";
-      element_single_role_ability2_name.value = "";
-      element_single_role_tag_friendly.checked = false;
-      element_single_role_tag_setup.checked = false;
-      element_single_role_tag_preserve.checked = false;
-      element_single_role_format.classList.remove("on");
-      element_editor_icon_preview.style.display = "none";
-      element_editor_icon_preview.src = "";
-      element_editor_icon_upload.classList.remove("has_icon");
-      editor_set_visible(false);
-    }
-
     /* -------------------[ Show / Hide Editor ]------------------- */
     function editor_set_visible(isVisible) {
       element_editor_input.classList.toggle("hidden", !isVisible);
-      element_editor_empty.classList.toggle("hidden", isVisible);
+    }
+
+    /* -------------------[ Mark Data As Unsaved ]------------------- */
+    function editor_unsaved() {
+      data_saved = false;
+      sidebar_render_save();
+    }
+
+    /* -------------------[ Project Metadata Editor Open ]------------------- */
+    function editor_project_open() {
+      sidebar_mode = "project";
+      sidebar_selected = null;
+      sidebar_render();
+      element_editor_project_name.value = data_project.name;
+      element_editor_project_author.value = data_project.author;
+      element_editor_project_description.value = data_project.description;
+      editor_project_icon_update(data_project.icon);
+      element_editor_project.classList.remove("hidden");
+      element_editor_input.classList.add("hidden");
+    }
+
+    /* -------------------[ Project Metadata Editor Close ]------------------- */
+    function editor_project_close() {
+      element_editor_project.classList.add("hidden");
+      if (data_roles.length === 0) {
+        editor_project_open();
+        return;
+      }
+      sidebar_mode = "role";
+      if (!sidebar_selected) {
+        sidebar_selected = data_roles[0].id;
+      }
+      data_roles_load();
+    }
+
+    /* -------------------[ Project Metadata Editor Update Icon ]------------------- */
+    function editor_project_icon_update(icon) {
+      if (!icon) {
+        element_editor_project_icon_preview.src = "";
+        element_editor_project_icon_preview.style.display = "none";
+        element_editor_project_icon_placeholder.style.display = "block";
+        element_editor_project_icon_upload.classList.remove("has_icon");
+        return;
+      }
+      element_editor_project_icon_preview.src = icon;
+      element_editor_project_icon_preview.style.display = "block";
+      element_editor_project_icon_placeholder.style.display = "none";
+      element_editor_project_icon_upload.classList.add("has_icon");
     }
 
     /* -------------------[ Handle File Reader For Image Upload ]------------------- */
@@ -1276,7 +1383,7 @@
 
     /* -------------------[ Show / Hide Stuff For Icon Upload ]------------------- */
     function editor_icon_update(icon) {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       /* Check if we don't have an icon */
       if (!icon) {
@@ -1313,7 +1420,7 @@
 
     /* -------------------[ Check To Enable / Disable Ability Input Boxes ]------------------- */
     function editor_enable_check() {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       /* Role type */
       const is_item = role.type === "Item";
@@ -1431,55 +1538,50 @@
     element_single_role_name.addEventListener("input", function () {
       if (sidebar_selected === null) return;
       if (this.value.trim() === "") {
-        data_roles.find(r => r.id === sidebar_selected).name = site_roles_default.name;
+        data_roles_get().name = site_roles_default.name;
       } else {
-        const role = data_roles.find(r => r.id === sidebar_selected);
+        const role = data_roles_get();
         if (!role) return;
         role.name = this.value;
       }
       sidebar_render();
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing activate order number */
     element_single_role_activate.addEventListener("input", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.activate = this.value;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing win condition */
     element_single_role_toplabel.addEventListener("input", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.toplabel = this.value;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing ability 1 */
     element_single_role_ability1.addEventListener("input", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.ability1 = this.value;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing ability 2 */
     element_single_role_ability2.addEventListener("input", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.ability2 = this.value;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing image icon */
@@ -1487,20 +1589,19 @@
       if (sidebar_selected === null) return;
       const file = this.files[0];
       editor_icon_upload(file, (icon) => {
-        const role = data_roles.find(r => r.id === sidebar_selected);
+        const role = data_roles_get();
         if (!role) return;
         role.icon = icon;
         editor_icon_update(icon);
         sidebar_render();
-        data_saved = false;
-        sidebar_render_save();
+        editor_unsaved();
       });
     });
 
     /* Changing role type */
     element_single_role_type.addEventListener("change", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       /* Change the actual type value */
       role.type = this.value;
@@ -1513,8 +1614,7 @@
       /* Update everything else */
       editor_icon_update(role.icon);
       sidebar_render();
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
       /* Update input and textarea highlight colour */
       let colour = getComputedStyle(document.documentElement).getPropertyValue("--type_guest").trim();
       if (role.type === "Stranger") {
@@ -1539,67 +1639,82 @@
 
     /* Changing ability 1 icon */
     element_single_role_ability1_type.addEventListener("change", function () {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.ability1_icon = this.value;
       element_single_role_ability1_icon.src = editor_ability_icon_order[this.value];
       editor_enable_check();
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing ability 2 icon */
     element_single_role_ability2_type.addEventListener("change", function () {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.ability2_icon = this.value;
       element_single_role_ability2_icon.src = editor_ability_icon_order[this.value];
       editor_enable_check();
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing ability 1 name */
     element_single_role_ability1_name.addEventListener("input", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.ability1_name = this.value;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing ability 2 name */
     element_single_role_ability2_name.addEventListener("input", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.ability2_name = this.value;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
     /* Changing role tags */
     element_single_role_tag_friendly.addEventListener("change", function () {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.tag_friendly = this.checked;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
     element_single_role_tag_setup.addEventListener("change", function () {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.tag_setup = this.checked;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
     element_single_role_tag_preserve.addEventListener("change", function () {
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.tag_preserve = this.checked;
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
+    });
+
+    /* Changing project metadata */
+    element_editor_project_name.addEventListener("input", function () {
+      data_project.name = this.value;
+      editor_unsaved();
+    });
+    element_editor_project_author.addEventListener("input", function () {
+      data_project.author = this.value;
+      editor_unsaved();
+    });
+    element_editor_project_description.addEventListener("input", function () {
+      data_project.description = this.value;
+      editor_unsaved();
+    });
+    element_editor_project_icon_input.addEventListener("change", function () {
+      const file = this.files[0];
+      editor_icon_upload(file, (icon) => {
+        data_project.icon = icon;
+        editor_project_icon_update(icon);
+        editor_unsaved();
+      });
     });
 
     /* Makes the "Add Role" button clickable to add a new role */
@@ -1607,7 +1722,7 @@
 
     /* Makes the "Save" button clickable to save all data to local storage */
     element_sidebar_save.addEventListener("click", () => {
-      localStorage.setItem("data_storage", JSON.stringify(data_roles));
+      localStorage.setItem("data_storage", JSON.stringify({ roles: data_roles, project: data_project }));
       data_saved = true;
       sidebar_render_save();
     });
@@ -1633,36 +1748,57 @@
     /* Makes the button clickable to toggle role formatting */
     element_single_role_format.addEventListener("click", function () {
       if (sidebar_selected === null) return;
-      const role = data_roles.find(r => r.id === sidebar_selected);
+      const role = data_roles_get();
       if (!role) return;
       role.format = !role.format;
       this.classList.toggle("on", role.format);
       editor_icon_update(role.icon);
       sidebar_render();
-      data_saved = false;
-      sidebar_render_save();
+      editor_unsaved();
     });
 
-    /* -------------------[ Drag & Drop Icons ]------------------- */
+    /* Makes the button clickable to open project metadata editor */
+    element_sidebar_project.addEventListener("click", () => {
+      editor_project_open();
+    });
+
+    /* Makes the button clickable to upload a project icon */
+    element_editor_project_icon_upload.addEventListener("click", () => {
+      element_editor_project_icon_input.click();
+    });
+
+    /* -------------------[ Drag & Drop Icons & Project Icon ]------------------- */
     /* Event listeners for all drag & drop related actions */
     ["dragenter", "dragover", "dragleave", "drop"].forEach(event => {
       element_editor_icon_upload.addEventListener(event, (e) => {
         e.preventDefault();
         e.stopPropagation();
       });
+      element_editor_project_icon_upload.addEventListener(event, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
     });
-    /* The actual code for uploading a file through drag & drop */
+    /* Role icons */
     element_editor_icon_upload.addEventListener("drop", (e) => {
       if (sidebar_selected === null) return;
       const file = e.dataTransfer.files[0];
       editor_icon_upload(file, (icon) => {
-        const role = data_roles.find(r => r.id === sidebar_selected);
+        const role = data_roles_get();
         if (!role) return;
         role.icon = icon;
         editor_icon_update(icon);
         sidebar_render();
-        data_saved = false;
-        sidebar_render_save();
+        editor_unsaved();
+      });
+    });
+    /* Project icon */
+    element_editor_project_icon_upload.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files[0];
+      editor_icon_upload(file, (icon) => {
+        data_project.icon = icon;
+        editor_project_icon_update(icon);
+        editor_unsaved();
       });
     });
 
@@ -1697,7 +1833,7 @@
       if (key_ctrl && (e.key.toLowerCase() === "delete" || e.key.toLowerCase() === "backspace")) {
         e.preventDefault();
         if (sidebar_selected === null) return;
-        const role = data_roles.find(r => r.id === sidebar_selected);
+        const role = data_roles_get();
         if (!role) return;
         const element = document.querySelector(".sidebar_entry.selected");
         if (element) {
@@ -1705,6 +1841,26 @@
         }
         data_roles_delete(element);
         return;
+      }
+
+      /* Ctrl + Minus (Delete role / project icon) */
+      if (key_ctrl && e.key === "-") {
+        e.preventDefault();
+        if (sidebar_mode === "role" && sidebar_selected !== null) {
+          const role = data_roles_get();
+          if (!role) return;
+          role.icon = "";
+          editor_icon_update("");
+          sidebar_render();
+          editor_unsaved();
+          return;
+        }
+        if (sidebar_mode === "project") {
+          data_project.icon = "";
+          editor_project_icon_update("");
+          editor_unsaved();
+          return;
+        }
       }
 
       /* Ctrl + Up (Move role upwards in list) */
@@ -1715,8 +1871,7 @@
         if (index <= 0) return;
         [data_roles[index - 1], data_roles[index]] = [data_roles[index], data_roles[index - 1]];
         sidebar_render();
-        data_saved = false;
-        sidebar_render_save();
+        editor_unsaved();
         return;
       }
 
@@ -1728,15 +1883,14 @@
         if (index === -1 || index >= data_roles.length - 1) return;
         [data_roles[index + 1], data_roles[index]] = [data_roles[index], data_roles[index + 1]];
         sidebar_render();
-        data_saved = false;
-        sidebar_render_save();
+        editor_unsaved();
         return;
       }
 
       /* Ctrl + D (Duplicate role) */
       if (key_ctrl && e.key.toLowerCase() === "d") {
         e.preventDefault();
-        const role = data_roles.find(r => r.id === sidebar_selected);
+        const role = data_roles_get();
         if (!role) return;
         const clone = JSON.parse(JSON.stringify(role));
         clone.id = data_roles_uuid();
@@ -1754,8 +1908,7 @@
         sidebar_selected = clone.id;
         sidebar_render();
         data_roles_load();
-        data_saved = false;
-        sidebar_render_save();
+        editor_unsaved();
       }
 
       /* Slash (Focus on role name input) */
@@ -1786,7 +1939,7 @@
     editor_ability_icon_init(element_single_role_ability2_type);
     data_storage_load();
     if (data_roles.length === 0) {
-      editor_clear();
+      editor_project_open();
     } else {
       sidebar_selected = data_roles[0].id;
       data_roles_load();
