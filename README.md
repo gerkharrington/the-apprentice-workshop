@@ -17,6 +17,10 @@ https://gerkharrington.github.io/the-apprentice-workshop/
   
 💾 <b>Ctrl+S</b>\
 ⠀↳ Saves your work instantly in the browser.\
+↩️ <b>Ctrl+Z</b>\
+⠀↳ Undo most recent change.\
+↪️ <b>Ctrl+Shift+Z</b>\
+⠀↳ Redo most recent change which has been undone.\
 🙌 <b>Ctrl+Enter</b>\
 ⠀↳ Adds a new, blank role.\
 ⠀↳ The role type will match what you currently have selected.\
