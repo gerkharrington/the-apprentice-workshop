@@ -1,0 +1,767 @@
+    /* -------------------[ Palette ]------------------- */
+    :root {
+      --type_prompt: #ffffff;
+      --type_item: #ffffff;
+      --type_guest: #f8e71c;
+      --type_stranger: #bb11ee;
+      --type_spirit: #abddff;
+
+      --type_prompt_dark: #777777;
+      --type_item_dark: #777777;
+      --type_guest_dark: #b1a414;
+      --type_stranger_dark: #7e0ba1;
+      --type_spirit_dark: #668498;
+
+      --black: #000000;
+      --very_dark_grey: #181818;
+      --dark_grey: #333333;
+      --light_grey: var(--type_prompt_dark);
+      --white: var(--type_prompt);
+      --danger: #D0021B;
+      --danger_dark: #ab0216;
+
+      --radius_main: 8px;
+      --radius_border: 2px;
+      --radius_focus: 2px;
+
+      --height_main: 50px;
+      --width_main: 250px;
+
+      --size_large: 32px;
+      --size_small: 16px;
+
+      --margin_small: 6px;
+      --margin_main: 10px;
+      --margin_large: 16px;
+
+      --padding_main: 10px;
+
+      --shrink: 0.96;
+
+      --transition_short: 0.2s ease;
+      --transition_long: 0.8s ease-out;
+
+      /* This one will change based on which role is selected */
+      --type_selected: var(--type_guest);
+      --type_selected_dark: var(--type_guest_dark);
+    }
+
+    /* -------------------[ Fonts ]------------------- */
+    @font-face {
+      font-family: 'TGPHeader';
+      src: url('assets/font/TGPHeader.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'TGPBody';
+      src: url('assets/font/TGPBody.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    /* -------------------[ Keyframe Animations ]------------------- */
+    @keyframes animation_blur_in {
+      from {
+        opacity: 0;
+        filter: blur(6px);
+        transform: scale(1.01);
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: scale(1);
+      }
+    }
+
+    @keyframes animation_slide_right {
+      from {
+        transform: translateX(-20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes animation_slide_up {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes animation_fade_in {
+      from {
+        transform: rotateY(90deg) scale(0.5);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* -------------------[ Default Styles ]------------------- */
+    /* Include padding & border in element sizing for everything (and default font)*/
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Grey things out if disabled */
+    *:disabled,
+    *.disabled {
+      opacity: 0.33;
+      cursor: not-allowed;
+      user-select: none;
+    }
+
+    /* Stop useless highlighting */
+    select,
+    img,
+    button,
+    footer,
+    span,
+    h2 {
+      user-select: none;
+    }
+
+    /* Body text */
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      background: var(--black);
+      color: var(--white);
+      animation: animation_blur_in var(--transition_long);
+      font-family: 'TGPBody', sans-serif;
+    }
+
+    textarea {
+      resize: none;
+            text-align: justify;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      background: var(--very_dark_grey);
+      border: var(--radius_border) solid var(--dark_grey);
+      border-radius: var(--radius_main);
+      padding: var(--padding_main);
+      color: var(--white);
+      outline: none;
+      transition: var(--transition_short);
+    }
+
+    select {
+      appearance: base-select;
+      min-width: var(--width_main);
+      max-width: var(--width_main);
+      height: var(--height_main);
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--type_selected);
+      box-shadow: 0 0 0 var(--radius_focus) var(--type_selected_dark);
+      transform: translateY(-1px);
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font-family: inherit;
+      font-size: var(--size_small);
+    }
+
+    ::picker(select) {
+      appearance: base-select;
+      font-family: 'TGPBody', sans-serif;
+      background: var(--very_dark_grey);
+      border: var(--radius_border) solid var(--dark_grey);
+      border-radius: var(--radius_main);
+      padding: var(--padding_main);
+      color: var(--white);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--dark_grey);
+      border-radius: var(--radius_main);
+    }
+
+        ::-webkit-scrollbar-corner {
+      background: var(--dark_grey);
+    }
+
+    /* Header text */
+    h2 {
+      margin: 0 0 var(--margin_large);
+      font-size: var(--size_large);
+      line-height: 1.2;
+      color: var(--white);
+      font-family: 'TGPHeader', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    /* -------------------[ Hidden Elements ]------------------- */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Hidden, but still "there" for screen reader accessibility */
+    .fake_hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+    }
+
+    /* -------------------[ Sidebar Style ]------------------- */
+    .sidebar_main {
+      position: fixed;
+      width: var(--width_main);
+      background: var(--very_dark_grey);
+      color: var(--white);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      border-right: var(--radius_border) solid var(--dark_grey);
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      transition: var(--transition_short);
+    }
+
+    .sidebar_main.expanded {
+      animation: animation_slide_right var(--transition_long);
+    }
+
+    .sidebar_toggle {
+      position: fixed;
+      top: 12px;
+      width: var(--height_main);
+      height: var(--height_main);
+      border: none;
+      left: calc(var(--width_main) - var(--radius_border));
+      background: var(--dark_grey);
+      color: var(--white);
+      cursor: pointer;
+      border-radius: 0 var(--radius_main) var(--radius_main) 0;
+      transition: var(--transition_short);
+      animation: animation_slide_right var(--transition_long);
+      font-size: 30px;
+      /* It's important the z-index is above everything else in the sidebar entry (the same layer as sidebar_delete) */
+      z-index: 2;
+    }
+
+    .sidebar_toggle.collapsed {
+      left: 0;
+    }
+
+    .sidebar_toggle:hover {
+      background: var(--light_grey);
+    }
+
+    .sidebar_main.collapsed {
+      pointer-events: none;
+      transform: translateX(-100%);
+    }
+
+    .sidebar_list {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: var(--margin_main);
+      min-height: 0;
+    }
+
+    .sidebar_search {
+      margin: var(--margin_small) 0;
+      padding: 5px var(--padding_main);
+    }
+
+    .sidebar_entry {
+      user-select: none;
+      display: flex;
+      cursor: pointer;
+      align-items: center;
+      gap: 10px;
+      padding: 8px var(--padding_main);
+      margin-bottom: var(--margin_small);
+      border-radius: var(--radius_main);
+      position: relative;
+      overflow: hidden;
+      z-index: 0;
+      max-height: 60px;
+      transition: var(--transition_short);
+    }
+
+    /* This puts everything above the coloured gradient when you hover over and select a role by increasing its z-index */
+    /* The sidebar_delete and sidebar_toggle element is at a z-index above this, so it's in front (priority for clicking) */
+    .sidebar_entry>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar_entry:hover {
+      background: var(--dark_grey);
+    }
+
+    .sidebar_entry:active {
+      transform: scale(var(--shrink));
+    }
+
+    .sidebar_entry.selected {
+      padding-left: 6px;
+      box-shadow: inset 0 0 0 2px var(--dark_grey);
+      border-left: 6px solid transparent;
+    }
+
+    .sidebar_entry.sidebar_type_prompt.selected {
+      border-left-color: var(--type_prompt);
+    }
+
+    .sidebar_entry.sidebar_type_item.selected {
+      border-left-color: var(--type_item);
+    }
+
+    .sidebar_entry.sidebar_type_guest.selected {
+      border-left-color: var(--type_guest);
+    }
+
+    .sidebar_entry.sidebar_type_stranger.selected {
+      border-left-color: var(--type_stranger);
+    }
+
+    .sidebar_entry.sidebar_type_spirit.selected {
+      border-left-color: var(--type_spirit);
+    }
+
+    .sidebar_entry.removing {
+      opacity: 0;
+      transform: translateX(-20px) scale(var(--shrink));
+      filter: blur(4px);
+      transition: var(--transition_short);
+    }
+
+    .sidebar_entry::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition_short);
+      z-index: 0;
+    }
+
+    .sidebar_entry:hover::before {
+      opacity: 0.18;
+    }
+
+    .sidebar_entry.selected::before {
+      opacity: 0.18;
+    }
+
+    .sidebar_type_prompt::before {
+      background: linear-gradient(45deg, var(--type_prompt), transparent);
+    }
+
+    .sidebar_type_item::before {
+      background: linear-gradient(45deg, var(--type_item), transparent);
+    }
+
+    .sidebar_type_guest::before {
+      background: linear-gradient(45deg, var(--type_guest), transparent);
+    }
+
+    .sidebar_type_stranger::before {
+      background: linear-gradient(45deg, var(--type_stranger), transparent);
+    }
+
+    .sidebar_type_spirit::before {
+      background: linear-gradient(45deg, var(--type_spirit), transparent);
+    }
+
+    .sidebar_add {
+      margin: var(--margin_small) 0;
+      padding: 5px var(--padding_main);
+      cursor: pointer;
+      border: none;
+      background: var(--dark_grey);
+      color: var(--white);
+      border-radius: var(--radius_main);
+      transition: var(--transition_short);
+    }
+
+    .sidebar_add:hover {
+      background: var(--light_grey);
+      transform: translateY(-1px);
+    }
+
+    .sidebar_add:active {
+      transform: scale(var(--shrink));
+    }
+
+    .sidebar_delete {
+      margin: 0;
+      padding: 2px var(--padding_main);
+      background: var(--danger);
+      color: var(--white);
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius_main);
+      transition: var(--transition_short);
+      /* It's important the z-index is above everything else in the sidebar entry (the same layer as sidebar_toggle) */
+      z-index: 2;
+    }
+
+    .sidebar_delete:active {
+      transform: scale(var(--shrink));
+    }
+
+    .sidebar_delete:hover {
+      background: var(--danger_dark);
+    }
+
+    .sidebar_container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
+    .sidebar_name {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+
+    .sidebar_icon {
+      width: 24px;
+      height: 24px;
+      object-fit: cover;
+      flex: 0 0 auto;
+
+    }
+
+    .sidebar_type {
+      font-size: var(--size_small);
+      text-transform: uppercase;
+      color: var(--light_grey);
+      margin: var(--margin_large) 0 var(--margin_main) 4px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      user-select: none;
+      transition: var(--transition_short);
+    }
+
+    .sidebar_type:hover {
+      opacity: 0.5;
+    }
+
+    .sidebar_type .arrow {
+      display: inline-block;
+      width: var(--size_small);
+      text-align: center;
+      transition: var(--transition_short);
+    }
+
+    .sidebar_type .arrow.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .sidebar_io_row {
+      display: flex;
+      gap: var(--margin_small);
+    }
+
+    .sidebar_io_row button {
+      flex: 1;
+    }
+
+    /* -------------------[ Editor Style ]------------------- */
+    .editor_main {
+      animation: animation_slide_up var(--transition_long);
+      width: 100%;
+      padding: 20px;
+      flex: none;
+      transition: var(--transition_short);
+    }
+
+    .editor_main.expanded {
+      padding-left: calc(var(--width_main) + 20px);
+    }
+
+    .editor_project_button {
+      margin-right: var(--margin_small);
+    }
+
+    .editor_button {
+      padding: 5px var(--padding_main);
+      cursor: pointer;
+      border: none;
+      background: var(--dark_grey);
+      color: var(--white);
+      border-radius: var(--radius_main);
+      transition: var(--transition_short);
+      height: var(--height_main);
+      width: var(--width_main);
+    }
+
+    .editor_button:hover {
+      background: var(--light_grey);
+      transform: translateY(-1px);
+    }
+
+    .editor_button:active {
+      transform: scale(var(--shrink));
+    }
+
+    .editor_button.on {
+      background: var(--type_selected);
+      color: var(--black);
+    }
+
+    .editor_empty {
+      margin: var(--margin_small) 0;
+      padding: var(--padding_main);
+    }
+
+    .editor_input {
+      height: 100px;
+      margin-bottom: var(--margin_main);
+    }
+
+    .editor_input_name {
+      height: var(--height_main);
+      margin-bottom: 0;
+      font-family: 'TGPHeader', sans-serif;
+    }
+
+    .editor_input_toplabel {
+      height: var(--height_main);
+      margin-bottom: var(--margin_small);
+    }
+
+    .editor_input_activate {
+      height: var(--height_main);
+      width: var(--width_main);
+      margin-bottom: 0;
+    }
+
+    .editor_input_top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: var(--margin_main);
+    }
+
+    .editor_icon_upload {
+      flex: 0 0 117px;
+      width: 117px;
+      height: 117px;
+      position: relative;
+      cursor: pointer;
+      border: 8px dashed var(--dark_grey);
+      border-radius: var(--radius_main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--transition_short);
+    }
+
+    .editor_icon_upload:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px var(--black);
+    }
+
+    .editor_icon_upload.has_icon {
+      border: none;
+    }
+
+    .editor_icon_placeholder {
+      font-size: 100px;
+      color: var(--light_grey);
+      user-select: none;
+      display: block;
+      /* A manual offset to the height to fix fonts being weird and lower or higher than usual */
+      transform: translateY(5px);
+    }
+
+    .editor_icon_preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      animation: animation_fade_in var(--transition_short);
+    }
+
+    .editor_input_top_right {
+      display: flex;
+      flex-direction: column;
+      gap: var(--margin_small);
+      flex: 1;
+    }
+
+    .editor_input_top_right_top {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .editor_format {
+      width: auto;
+      min-width: var(--width_main);
+    }
+
+    .editor_input_top_right_bottom {
+      display: flex;
+      gap: var(--margin_small);
+    }
+
+    .editor_input_bottom {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: var(--margin_main);
+    }
+
+    .editor_ability_icon {
+      width: var(--height_main);
+      height: var(--height_main);
+    }
+
+    .editor_ability_icon_preview {
+      width: var(--height_main);
+      height: var(--height_main);
+      object-fit: contain;
+      flex: 0 0 auto;
+      transition: var(--transition_short);
+    }
+
+    .editor_footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      color: var(--dark_grey);
+      font-size: var(--size_small);
+      text-align: right;
+      pointer-events: none;
+      /* Keeps this in front of everything (except the modal, which uses an extra 9) */
+      z-index: 9999;
+    }
+
+    .editor_input_bottom_bottom {
+      display: flex;
+      align-items: center;
+      gap: var(--margin_main);
+      margin-bottom: var(--margin_main);
+    }
+
+    .editor_tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--margin_main);
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .editor_tag_icon {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex: 0 0 auto;
+      opacity: 0.33;
+      transition: var(--transition_short);
+    }
+
+    .editor_tag input[type="checkbox"]:checked+.editor_tag_icon {
+      opacity: 1;
+    }
+
+    .editor_tag span {
+      color: var(--light_grey);
+      transition: var(--transition_short);
+    }
+
+    .editor_tag input[type="checkbox"]:checked~span {
+      color: var(--white);
+    }
+
+    /* -------------------[ Modal Style ]------------------- */
+    .modal {
+      position: fixed;
+      inset: 0;
+      /* Black at 33% opacity */
+      background: #00000054;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Keeps this in front of everything (even the footer, which uses one less 9) */
+      z-index: 99999;
+    }
+
+    .modal_box {
+      width: 300px;
+      background: var(--very_dark_grey);
+      border: var(--radius_border) solid var(--dark_grey);
+      border-radius: var(--radius_main);
+      padding: var(--padding_main);
+      animation: animation_fade_in var(--transition_short);
+    }
+
+    .modal_message {
+      margin-bottom: var(--margin_main);
+      color: var(--white);
+      font-size: var(--size_small);
+    }
+
+    .modal_buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--margin_small);
+    }
+
+    .modal_buttons button {
+      padding: var(--padding_main);
+      border: none;
+      border-radius: var(--radius_main);
+      cursor: pointer;
+      background: var(--dark_grey);
+      color: var(--white);
+      transition: var(--transition_short);
+    }
+
+    .modal_buttons button:hover {
+      background: var(--light_grey);
+    }
