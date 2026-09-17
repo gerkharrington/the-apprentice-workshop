@@ -200,6 +200,19 @@
       color: var(--white);
     }
 
+    ::picker(select)::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::picker(select)::-webkit-scrollbar-thumb {
+      background: var(--dark_grey);
+      border-radius: var(--radius_main);
+    }
+
+    ::picker(select)::-webkit-scrollbar-corner {
+      background: var(--dark_grey);
+    }
+
     ::-webkit-scrollbar {
       width: 6px;
     }
@@ -534,6 +547,7 @@
 
     .editor_project_button {
       margin-right: var(--margin_small);
+      margin-bottom: var(--margin_small);
     }
 
     .editor_button {
@@ -584,7 +598,7 @@
     }
 
     .editor_input {
-      height: 100px;
+      height: calc(var(--height_main)*2);
       margin-bottom: var(--margin_main);
     }
 
@@ -743,6 +757,11 @@
 
     .editor_tag input[type="checkbox"]:checked~span {
       color: var(--white);
+    }
+
+    .editor_card_preview {
+      display: block;
+      height: calc(var(--height_main)*2);
     }
 
     /* -------------------[ Modal Style ]------------------- */

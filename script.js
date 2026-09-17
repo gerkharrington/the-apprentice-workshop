@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.18.0";
+const site_version = "0.19.0";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -203,6 +203,7 @@ const element_editor_input = document.getElementById("editor_input");
 const element_editor_icon_preview = document.getElementById("editor_icon_preview");
 const element_editor_icon_upload = document.getElementById("editor_icon_upload");
 const element_editor_icon_placeholder = document.getElementById("editor_icon_placeholder");
+const element_editor_card_preview = document.getElementById("editor_card_preview");
 const element_editor_footer_year = document.getElementById("editor_footer_year");
 const element_editor_footer_version = document.getElementById("editor_footer_version");
 const element_editor_project = document.getElementById("editor_project");
@@ -381,23 +382,56 @@ function data_roles_uuid() {
   return window.crypto?.randomUUID ? window.crypto.randomUUID() : 'id_' + Math.random().toString(16).slice(2) + Date.now();
 }
 
+/* -------------------[ Validate Any File Name ]------------------- */
+function data_filename_safe(name, fallback = editor_untitled) {
+  const safe = String(name || "")
+    .trim()
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "");
+
+  return safe || fallback;
+}
+
 /* -------------------[ Load From Local Storage ]------------------- */
 function data_storage_load() {
   const saved = localStorage.getItem("data_storage");
-  if (saved) {
-    data_saved = true;
-    try {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        data_roles = parsed;
-      } else {
-        data_roles = parsed.roles || [];
-        data_project = parsed.project || data_project;
-      }
-    } catch (e) {
-      data_roles = [];
+  if (!saved) return;
+
+  /* Old loading code */
+  /*data_saved = true;
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      data_roles = parsed;
+    } else {
+      data_roles = parsed.roles || [];
+      data_project = parsed.project || data_project;
     }
+  } catch (e) {
+    data_roles = [];
+  }*/
+
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      data_roles = parsed;
+      data_project = structuredClone(site_project_default);
+    } else if (parsed && typeof parsed === "object") {
+      data_roles = Array.isArray(parsed.roles) ? parsed.roles : [];
+      data_project = {
+        ...site_project_default,
+        ...(parsed.project || {})
+      };
+    } else {
+      data_roles = [];
+      data_project = structuredClone(site_project_default);
+    }
+    data_saved = true;
+  } catch (e) {
+    data_roles = [];
+    data_project = structuredClone(site_project_default);
+    data_saved = false;
   }
+
 }
 
 /* -------------------[ Export As JSON ]------------------- */
@@ -450,7 +484,7 @@ function export_json() {
     const url = URL.createObjectURL(new Blob([JSON.stringify({ project: project_export, roles: data_roles_export }, null, 2)], { type: "application/json" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(data_project.name || editor_untitled).trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, "")}.json`;
+    a.download = data_filename_safe(data_project.name) + ".json"
     a.click();
     URL.revokeObjectURL(url);
   });
@@ -459,7 +493,6 @@ function export_json() {
 /* -------------------[ Import From JSON ]------------------- */
 function import_json(file) {
   if (!file) return;
-  data_history_push();
   const sidebar_file_reader = new FileReader();
   sidebar_file_reader.onload = function (e) {
     try {
@@ -475,12 +508,15 @@ function import_json(file) {
         return;
       }
       if (imported_roles.length > 1000) { modal_show_alert("Failed to load file!\nError B-5: Too many roles at once."); return; }
+
+      data_history_push();
+
       /* Set all the data */
       const clone = typeof structuredClone === "function" ? structuredClone(site_roles_default) : JSON.parse(JSON.stringify(site_roles_default));
       data_roles = imported_roles.map(role => ({
         ...clone,
-        id: data_roles_uuid(),
-        ...role
+        ...role,
+        id: data_roles_uuid()
       }));
       data_project = typeof structuredClone === "function" ? structuredClone({ ...site_project_default, ...imported_project }) : JSON.parse(JSON.stringify({ ...site_project_default, ...imported_project }));
       /* Load everything else (now role data is done) */
@@ -565,16 +601,21 @@ function data_roles_add_vanilla(vanilla_role) {
 /* -------------------[ Delete Role ]------------------- */
 function data_roles_delete(element) {
   if (!element) return;
+
+  const roleId = sidebar_selected;
+  if (!roleId) return;
+
   data_history_push();
+
   const on_transition_end = (e) => {
     if (e.propertyName !== "opacity") return;
     element.removeEventListener("transitionend", on_transition_end);
     /* Store the index of the role we deleted */
-    const deleted = data_roles.findIndex(r => r.id === sidebar_selected);
+    const deleted = data_roles.findIndex(r => r.id === roleId);
     /* Clear it from the icon cache */
     data_roles_format_cache_clear(data_roles[deleted]?.id);
     /* Properly delete the role after the animation plays */
-    data_roles = data_roles.filter(r => r.id !== sidebar_selected);
+    data_roles = data_roles.filter(r => r.id !== roleId);
     /* Select a new role */
     if (data_roles.length === 0) {
       sidebar_selected = null;
@@ -596,7 +637,9 @@ function data_roles_delete(element) {
 /* -------------------[ Mark Role As Edited (Non-Vanilla) ]------------------- */
 function data_roles_edited() {
   const role = data_roles_get();
-  if (!role || !role.is_vanilla) return;
+  if (!role) return;
+  editor_card_preview_render();
+  if (!role.is_vanilla) return;
   role.is_vanilla = false;
 }
 
@@ -633,6 +676,7 @@ function data_roles_load() {
   const colour_dark = data_css.getPropertyValue(colour_array_dark[role.type] || "--type_guest_dark").trim();
   document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
   editor_enable_check();
+  editor_card_preview_render();
 }
 
 /* -------------------[ Mark Data As Unsaved ]------------------- */
@@ -681,8 +725,6 @@ function editor_icon_upload(file, onSuccess) {
   if (!file.type) { modal_show_alert("Failed to load file! Please try another file.\nError B-1: File type data not found."); return; }
   if (!file.type.startsWith("image/")) { modal_show_alert("Failed to load file! Please try another file.\nError B-2: Not a valid image file type."); return; }
   if (file.size > 4 * 1024 * 1024) { modal_show_alert("Failed to load file! Please try another file.\nError B-3: File size is dangerously large (>4MB)."); return; }
-  /* Save old icon state to history */
-  data_history_push();
   /* Create the file reader */
   const editor_file_reader = new FileReader();
   editor_file_reader.onload = async function (e) {
@@ -691,6 +733,8 @@ function editor_icon_upload(file, onSuccess) {
     image.src = e.target.result;
     image.onerror = function () { modal_show_alert("Failed to load file! Please try another file.\nError A-3: Unknown - browser failed to decode image."); };
     image.onload = function () {
+      /* Save old icon state to history */
+      data_history_push();
       /* Define the size (width / height) of the converted image */
       const target_size = 1024;
       /* Create our canvas */
@@ -790,23 +834,22 @@ function editor_enable_check() {
   /* Disable ability text if type is set to "none" */
   const is_ability1_none = element_single_role_ability1_type.value === "none";
   const is_ability2_none = element_single_role_ability2_type.value === "none";
-  /* Disable ability icons for items */
-  const ability1_icon_disabled = is_item || is_prompt;
+  /* Disable ability icons for prompts & ability 2 disabled for items */
+  const ability1_icon_disabled = is_prompt;
   const ability2_icon_disabled = is_item || is_prompt;
   /* Disable text inputs if icon is set to "none" and it's possible to change */
   const ability1_disabled = !ability1_icon_disabled && is_ability1_none;
   const ability2_disabled = !ability2_icon_disabled && is_ability2_none;
   /* Apply disabled & enabled states */
   element_single_role_ability1.disabled = ability1_disabled || is_prompt;
-  element_single_role_ability2.disabled = ability2_disabled || is_prompt;
+  element_single_role_ability2.disabled = ability2_disabled || is_prompt || is_item;
   element_single_role_ability1_type.disabled = ability1_icon_disabled;
   element_single_role_ability2_type.disabled = ability2_icon_disabled;
   element_single_role_ability1_icon.classList.toggle("disabled", ability1_icon_disabled || is_ability1_none);
   element_single_role_ability2_icon.classList.toggle("disabled", ability2_icon_disabled || is_ability2_none);
-  element_single_role_ability1_name.disabled = ability1_icon_disabled || is_ability1_none;
+  element_single_role_ability1_name.disabled = ability1_icon_disabled || is_ability1_none || is_item;
   element_single_role_ability2_name.disabled = ability2_icon_disabled || is_ability2_none;
-  element_single_role_activate.disabled = is_item;
-  element_single_role_toplabel.disabled = !(is_stranger || is_prompt);
+  element_single_role_toplabel.disabled = !(is_stranger || is_prompt || is_item);
   /* Role tags */
   element_single_role_tag_friendly.disabled = is_item || is_prompt;
   element_single_role_tag_setup.disabled = is_item || is_prompt;
@@ -868,10 +911,12 @@ function data_roles_format(imageSrc, roleType, callback) {
     if (roleType === "Stranger") base = colour_stranger;
     else if (roleType === "Spirit") base = colour_spirit;
     else if (roleType === "Item") base = colour_item;
+    else if (roleType === "Prompt") base = colour_prompt;
     let base_dark = colour_guest_dark;
     if (roleType === "Stranger") base_dark = colour_stranger_dark;
     else if (roleType === "Spirit") base_dark = colour_spirit_dark;
     else if (roleType === "Item") base_dark = colour_item_dark;
+    else if (roleType === "Prompt") base_dark = colour_prompt_dark;
     /* Start going through each pixel of the image */
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i], g = data[i + 1], b = data[i + 2];
@@ -933,7 +978,7 @@ async function export_sheet() {
   /* Download file */
   const a = document.createElement("a");
   a.href = canvas.toDataURL("image/png");
-  a.download = `${(data_project.name || editor_untitled).trim()}.png`;
+  a.download = data_filename_safe(data_project.name) + ".png"
   a.click();
 }
 async function export_sheet_role(ctx, role, x, y, width, height) {
@@ -970,7 +1015,7 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
   ctx.textAlign = "left";
   ctx.fillText(role.name || "", textX, y + headerSize);
   /* Ability 1 */
-  const abilityY = y + headerSize + gap;
+  let abilityY = y + headerSize + gap;
   if (role.ability1_icon && role.ability1_icon !== "none") {
     const icon = editor_ability_icon_order[role.ability1_icon];
     if (icon) {
@@ -983,6 +1028,7 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
       export_cards_wrap_justify(ctx, role.ability1 || "", textX + abilityIconSize + gap, abilityY + bodySize + 6, width - abilityIconSize - iconSize - bodySize - gap, bodySize * 1.35, false);
     }
   }
+  abilityY += bodySize * 1.35;
   /* Ability 2 */
   if (role.ability2_icon && role.ability2_icon !== "none") {
     const icon = editor_ability_icon_order[role.ability2_icon];
@@ -998,6 +1044,25 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
   }
 }
 
+/* -------------------[ Render Card Preview ]------------------- */
+async function editor_card_preview_render() {
+  const role = data_roles_get();
+  if (!role) {
+    element_editor_card_preview.src = "";
+    element_editor_card_preview.style.display = "none";
+    return;
+  }
+  try {
+    const pngData = await export_cards_render(role, 0.15);
+    element_editor_card_preview.src = pngData;
+    element_editor_card_preview.style.display = "block";
+  } catch (err) {
+    console.error("Failed to render card preview:", err);
+    element_editor_card_preview.src = "";
+    element_editor_card_preview.style.display = "none";
+  }
+}
+
 /* -------------------[ Export PNG Cards ]------------------- */
 async function export_cards() {
   const zip = new JSZip();
@@ -1008,29 +1073,33 @@ async function export_cards() {
     zip.file(`${safeName || editor_untitled}.png`, base64, { base64: true });
   }
   const blob = await zip.generateAsync({ type: "blob" });
-  saveAs(blob, `${data_project.name || editor_untitled}.zip`);
+  saveAs(blob, data_filename_safe(data_project.name) + ".zip"
+  );
 }
 
 /* -------------------[ Render Role Card (Main) ]------------------- */
-async function export_cards_render(role) {
+async function export_cards_render(role, s = 1) {
   return new Promise(async (resolve) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     /* Bridge card ratio: 3.5 x 2.25 inches */
     /* These values should match the ratio */
-    canvas.width = 3.5 * 1200;
-    canvas.height = 2.25 * 1200;
+    canvas.width = 3.5 * 1200 * s;
+    canvas.height = 2.25 * 1200 * s;
     /* Rendering values */
-    const paddingX = 150;
-    const borderDistance = 80;
-    const iconSize = 1350;
+    const paddingX = 150 * s;
+    const borderDistance = 80 * s;
+    const borderWobble = 16 * s;
+    const borderStrokeWidth = 20 * s;
+    const borderRadius = 120 * s;
+    const iconSize = 1350 * s;
     const iconY = (canvas.height / 2) - (iconSize / 2);
-    const bodySize = 120;
-    const headerSize = 240;
-    const minimumSize = 167;
+    const bodySize = 120 * s;
+    const headerSize = 240 * s;
+    const minimumSize = 167 * s;
     const headerY = (iconY / 2) + (borderDistance / 2);
-    const columnGap = 40;
+    const columnGap = 40 * s;
     /* Black Background */
     ctx.fillStyle = data_css.getPropertyValue("--black").trim();
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1040,7 +1109,7 @@ async function export_cards_render(role) {
     ctx.beginPath();
     ctx.roundRect(borderDistance, borderDistance, canvas.width - (borderDistance * 2), canvas.height - (borderDistance * 2), 80);
     ctx.stroke();*/
-    export_cards_render_border_full(ctx, borderDistance, borderDistance, canvas.width - borderDistance * 2, canvas.height - borderDistance * 2, 120, math_random_seed_generate(role.name || editor_untitled));
+    export_cards_render_border_full(ctx, borderDistance, borderDistance, canvas.width - borderDistance * 2, canvas.height - borderDistance * 2, borderRadius, borderStrokeWidth, math_random_seed_generate(role.name || editor_untitled), borderWobble);
     /* Cut out bottom corners to make room for activate order number & role tag icons */
     ctx.fillStyle = data_css.getPropertyValue("--black").trim();
     ctx.shadowColor = data_css.getPropertyValue("--black").trim();
@@ -1193,14 +1262,14 @@ async function export_cards_render(role) {
 
 /* -------------------[ Render Role Card (Full Border) ]------------------- */
 /* The complete border around the cards is multiple borders laid over top of each other */
-function export_cards_render_border_full(ctx, x, y, width, height, radius, rng) {
+function export_cards_render_border_full(ctx, x, y, width, height, radius, strokeWidth, rng, wbl) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.strokeStyle = data_css.getPropertyValue("--white").trim();
-  ctx.lineWidth = 20;
+  ctx.lineWidth = strokeWidth;
   /* Draw three lines over top of each other for the border */
   for (let pass = 0; pass < 3; pass++) {
-    export_cards_render_border_line(ctx, x, y, width, height, radius, rng);
+    export_cards_render_border_line(ctx, x, y, width, height, radius, rng, wbl);
     ctx.stroke();
   }
 }
@@ -1243,10 +1312,11 @@ function math_random_seed_generate(seed) {
 
 /* -------------------[ Render Role Card (Single Border) ]------------------- */
 /* This is the code for one single border */
-function export_cards_render_border_line(ctx, x, y, w, h, r, rng) {
-  const wobble = 16;
+function export_cards_render_border_line(ctx, x, y, w, h, r, rng, wbl = 16) {
+  const wobble = wbl;
   const step = 90;
   const cornerLessWobble = 0.35;
+
   function jitter(n, amount = wobble) {
     return n + (rng() - 0.5) * amount;
   }

@@ -75,6 +75,13 @@
         <button id="editor_project_import_json" class="editor_button editor_project_button">Import JSON</button>
         <input id="editor_project_import_json_file" type="file" accept="application/json" class="fake_hidden">
       </div>
+
+      <!-- Site Footer -->
+      <footer id="editor_footer" class="editor_footer">
+        <p>v<span id="editor_footer_version" class="editor_footer_version"></span> | © 2026-<span
+            id="editor_footer_year" class="editor_footer_year"></span>. All rights reserved.
+        </p>
+      </footer>
     </div>
 
     <div id="editor_input" class="hidden">
@@ -103,9 +110,9 @@
           <div class="editor_input_top_right_bottom">
             <!-- Role Name Input -->
             <div class="editor_name_container">
-            <div id="editor_marker" class="editor_marker">★ Vanilla roles should not be edited</div>
-            <label for="single_role_name" class="fake_hidden">Role Name Input</label>
-            <input id="single_role_name" class="editor_input_name" placeholder="Role Name" type="text">
+              <div id="editor_marker" class="editor_marker">★ Vanilla roles should not be edited</div>
+              <label for="single_role_name" class="fake_hidden">Role Name Input</label>
+              <input id="single_role_name" class="editor_input_name" placeholder="Role Name" type="text">
             </div>
             <!-- Role Type Input -->
             <select id="single_role_type">
@@ -121,8 +128,7 @@
 
       </div>
 
-      <textarea id="single_role_toplabel" class="editor_input_toplabel"
-        placeholder="Win Condition / Prompt Card Label"></textarea>
+      <textarea id="single_role_toplabel" class="editor_input_toplabel" placeholder="Win Condition / Label"></textarea>
 
       <!-- Ability Inputs -->
       <!-- Ability 1 -->
@@ -143,8 +149,7 @@
       <!-- Very Bottom Row -->
       <div class="editor_input_bottom_bottom">
         <!-- Activate Order Number Input -->
-        <textarea id="single_role_activate" class="editor_input_activate"
-          placeholder="Activate / Prompt Number"></textarea>
+        <textarea id="single_role_activate" class="editor_input_activate" placeholder="Activate / Prompt #"></textarea>
         <!-- Role Tags -->
         <label class="editor_tag">
           <input id="single_role_tag_friendly" type="checkbox" class="fake_hidden">
@@ -163,7 +168,11 @@
         </label>
 
       </div>
+
+      <img id="editor_card_preview" class="editor_card_preview" alt="Card Image">
+      
     </div>
+    
   </main>
 
   <!-- Custom Modal -->
@@ -188,12 +197,6 @@
       </div>
     </div>
   </div>
-
-  <footer id="editor_footer" class="editor_footer">
-    <p>v<span id="editor_footer_version" class="editor_footer_version"></span> | © 2026-<span id="editor_footer_year"
-        class="editor_footer_year"></span>. All rights reserved.
-    </p>
-  </footer>
 
   <!-- Download JSZip and FileSaver.js -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
