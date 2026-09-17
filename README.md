@@ -83,4 +83,7 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⠀ ↳ Custom roles are stored locally on your computer and never uploaded to the cloud.
 </details>
 
-This tool is designed to work on all major browsers and operating systems. Screen reader support is available but not recommended.
+---
+
+This tool is designed to work on all major browsers and operating systems.
+Screen reader support is available but not recommended.

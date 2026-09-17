@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.19.1";
+const site_version = "0.19.2";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -50,7 +50,7 @@ const site_project_default = {
   author: "",
   icon: "",
   description: ""
-}
+};
 
 /* Default role data */
 const site_roles_default = {
@@ -729,7 +729,6 @@ function editor_icon_upload(file, onSuccess) {
   const editor_file_reader = new FileReader();
   editor_file_reader.onload = async function (e) {
     const image = new Image();
-    /*image.crossOrigin = "anonymous";*/
     image.src = e.target.result;
     image.onerror = function () { modal_show_alert("Failed to load file! Please try another file.\nError A-3: Unknown - browser failed to decode image."); };
     image.onload = function () {
@@ -896,7 +895,6 @@ function data_roles_format_cache_clear(roleId) {
 /* -------------------[ Role Icon Formatting ]------------------- */
 function data_roles_format(imageSrc, roleType, callback) {
   const icon = new Image();
-  /*icon.crossOrigin = "anonymous";*/
   icon.onload = () => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -1389,7 +1387,6 @@ async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y
 function export_cards_load_image(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    /*img.crossOrigin = "anonymous";*/
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;

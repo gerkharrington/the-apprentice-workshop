@@ -546,7 +546,7 @@
     }
 
     .editor_project_button {
-      margin-right: var(--margin_small);
+      margin-right: 0;
       margin-bottom: var(--margin_small);
     }
 
@@ -759,9 +759,9 @@
       color: var(--white);
     }
 
-    .editor_card_preview {
+    .editor_card {
       display: block;
-      height: calc(var(--height_main)*2);
+      max-height: calc(var(--height_main)*2);
     }
 
     /* -------------------[ Modal Style ]------------------- */
