@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.17.0";
+const site_version = "0.18.0";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -69,6 +69,7 @@ const site_roles_default = {
   type: sidebar_type_order[0],
   activate: "",
   format: false,
+  is_vanilla: false,
   tag_friendly: false,
   tag_setup: false,
   tag_preserve: false
@@ -156,9 +157,18 @@ let data_history_last = "";
 const element_modal = {
   main: document.getElementById("modal"),
   msg: document.getElementById("modal_message"),
+  cancel: document.getElementById("modal_cancel"),
   ok: document.getElementById("modal_ok"),
-  cancel: document.getElementById("modal_cancel")
+  add_role: document.getElementById("modal_add_role"),
+  new_role: document.getElementById("modal_new_role"),
+  load_vanilla: document.getElementById("modal_load_vanilla"),
+  vanilla_select_container: document.getElementById("modal_vanilla_select_container"),
+  vanilla_select: document.getElementById("modal_vanilla_select"),
+  vanilla_icon: document.getElementById("modal_vanilla_icon")
 };
+
+/* Vanilla roles cache (this is updated in data_roles_vanilla_load) */
+let data_roles_vanilla = null;
 
 /* Everything else */
 const element_single_role_name = document.getElementById("single_role_name");
@@ -177,6 +187,7 @@ const element_single_role_activate = document.getElementById("single_role_activa
 const element_single_role_tag_friendly = document.getElementById("single_role_tag_friendly");
 const element_single_role_tag_setup = document.getElementById("single_role_tag_setup");
 const element_single_role_tag_preserve = document.getElementById("single_role_tag_preserve");
+const element_single_role_format = document.getElementById("single_role_format");
 const element_sidebar_main = document.getElementById("sidebar_main");
 const element_sidebar_list = document.getElementById("sidebar_list");
 const element_sidebar_project = document.getElementById("sidebar_project");
@@ -186,8 +197,8 @@ const element_sidebar_undo = document.getElementById("sidebar_undo");
 const element_sidebar_redo = document.getElementById("sidebar_redo");
 const element_sidebar_search = document.getElementById("sidebar_search");
 const element_sidebar_toggle = document.getElementById("sidebar_toggle");
-const element_single_role_format = document.getElementById("single_role_format");
 const element_editor_main = document.getElementById("editor_main");
+const element_editor_marker = document.getElementById("editor_marker");
 const element_editor_input = document.getElementById("editor_input");
 const element_editor_icon_preview = document.getElementById("editor_icon_preview");
 const element_editor_icon_upload = document.getElementById("editor_icon_upload");
@@ -207,6 +218,27 @@ const element_editor_project_export_sheet = document.getElementById("editor_proj
 const element_editor_project_export_json = document.getElementById("editor_project_export_json");
 const element_editor_project_import_json = document.getElementById("editor_project_import_json");
 const element_editor_project_import_json_file = document.getElementById("editor_project_import_json_file");
+
+/* -------------------[ Load Vanilla Roles ]------------------- */
+async function data_roles_vanilla_load() {
+  if (data_roles_vanilla !== null) {
+    return data_roles_vanilla;
+  }
+  try {
+    const response = await fetch("assets/vanilla_roles.json");
+    if (!response.ok) {
+      modal_show_alert("Failed to vanilla roles!\nError C-1: Missed response."); return;
+    }
+    const parsed = await response.json();
+    if (!Array.isArray(parsed)) {
+      modal_show_alert("Failed to vanilla roles!\nError C-2: Role data is not loaded as an array."); return;
+    }
+    data_roles_vanilla = parsed;
+    return data_roles_vanilla;
+  } catch (err) {
+    modal_show_alert("Failed to vanilla roles!\nError C-3: Failed."); return;
+  }
+}
 
 /* -------------------[ Update Save Button Text ]------------------- */
 function sidebar_render_save() {
@@ -292,7 +324,7 @@ function sidebar_render() {
         const element = e.target.closest(".sidebar_entry");
         data_roles_delete(element);
       };
-      
+
       if (role.id === sidebar_selected) {
         sidebar_delete.classList.remove("hidden");
       }
@@ -314,6 +346,16 @@ function sidebar_render() {
       const name = document.createElement("span");
       name.textContent = role.name;
       name.className = "sidebar_name";
+
+      /* Render a star for unedited vanilla roles */
+      const marker = document.createElement("span");
+      marker.className = "sidebar_marker";
+      marker.setAttribute("aria-hidden", "true");
+      marker.textContent = "";
+      if (role.is_vanilla) {
+        marker.textContent = "★";
+      }
+      div.appendChild(marker);
 
       /* This is the order of how everything displays in one sidebar slot */
       div.appendChild(sidebar_delete);
@@ -458,8 +500,27 @@ function data_roles_get() {
   return data_roles.find(r => r.id === sidebar_selected);
 }
 
+/* -------------------[ Add New Role (User Choice Modal) ]------------------- */
+async function data_roles_add_modal() {
+  const choice = await modal_show_add_role();
+  /* Add a blank, new role */
+  if (choice === "new") {
+    data_roles_add_new();
+    return;
+  }
+  /* Load a role from the vanilla set */
+  if (choice === "vanilla") {
+    const vanilla_roles = await data_roles_vanilla_load();
+    if (!vanilla_roles) return;
+    const role = await modal_show_vanilla_selector(vanilla_roles);
+    if (role) {
+      data_roles_add_vanilla(role);
+    }
+  }
+}
+
 /* -------------------[ Add New Role ]------------------- */
-function data_roles_add() {
+function data_roles_add_new() {
   data_history_push();
   /* Choose what type the role will be created as (guest by default) */
   const default_role_type = sidebar_selected !== null ? (data_roles_get()?.type || sidebar_type_order[0]) : sidebar_type_order[0];
@@ -472,6 +533,29 @@ function data_roles_add() {
   });
   sidebar_mode = "role";
   sidebar_selected = data_roles[data_roles.length - 1].id;
+  element_editor_project.classList.add("hidden");
+  sidebar_render();
+  editor_unsaved();
+  data_roles_load();
+}
+
+/* -------------------[ Add Vanilla Role ]------------------- */
+function data_roles_add_vanilla(vanilla_role) {
+  if (!vanilla_role) return;
+  data_history_push();
+  /* Load default role data, because the json file we're reading will only override some of it */
+  const clone = typeof structuredClone === "function" ? structuredClone(site_roles_default) : JSON.parse(JSON.stringify(site_roles_default));
+  /* Now generate the data of this new role we're adding, with any custom data this role needs taking priority over the default data */
+  const role = {
+    ...clone,
+    ...vanilla_role,
+    id: data_roles_uuid(),
+    is_vanilla: true
+  };
+  /* Finish up by adding this role to the system */
+  data_roles.push(role);
+  sidebar_mode = "role";
+  sidebar_selected = role.id;
   element_editor_project.classList.add("hidden");
   sidebar_render();
   editor_unsaved();
@@ -509,6 +593,13 @@ function data_roles_delete(element) {
   element.classList.add("removing");
 }
 
+/* -------------------[ Mark Role As Edited (Non-Vanilla) ]------------------- */
+function data_roles_edited() {
+  const role = data_roles_get();
+  if (!role || !role.is_vanilla) return;
+  role.is_vanilla = false;
+}
+
 /* -------------------[ Load Roles ]------------------- */
 function data_roles_load() {
   const role = data_roles_get();
@@ -532,6 +623,8 @@ function data_roles_load() {
   element_single_role_tag_setup.checked = role.tag_setup;
   element_single_role_tag_preserve.checked = role.tag_preserve;
   element_single_role_format.classList.toggle("on", role.format);
+  element_editor_marker.classList.toggle("hidden", !role?.is_vanilla);
+
   editor_icon_render(role.icon);
   element_editor_input.classList.toggle("hidden", false);
   /* Update input and textarea highlight colour */
@@ -559,6 +652,11 @@ function editor_project_open() {
   editor_project_icon_render(data_project.icon);
   element_editor_project.classList.remove("hidden");
   element_editor_input.classList.add("hidden");
+
+  const colour = data_css.getPropertyValue("--type_guest").trim();
+  document.documentElement.style.setProperty("--type_selected", colour);
+  const colour_dark = data_css.getPropertyValue("--type_guest_dark").trim();
+  document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
 }
 
 /* -------------------[ Project Metadata Editor Update Icon ]------------------- */
@@ -657,10 +755,34 @@ function editor_ability_icon_init(select) {
   });
 }
 
-/* -------------------[ Check To Enable / Disable Ability Input Boxes ]------------------- */
+/* -------------------[ Check To Enable / Disable Ability Inputs ]------------------- */
 function editor_enable_check() {
   const role = data_roles_get();
   if (!role) return;
+
+  /* Enable everyting first*/
+  element_single_role_name.disabled = false
+  element_single_role_toplabel.disabled = false
+  element_single_role_ability1_type.disabled = false
+  element_single_role_ability1_name.disabled = false
+  element_single_role_ability1_icon.classList.remove("disabled");
+  element_single_role_ability1.disabled = false
+  element_single_role_ability2_type.disabled = false
+  element_single_role_ability2_name.disabled = false
+  element_single_role_ability2_icon.classList.remove("disabled");
+  element_single_role_ability2.disabled = false
+  element_single_role_icon.disabled = false
+  element_single_role_type.disabled = false
+  element_single_role_activate.disabled = false
+  element_single_role_format.disabled = false
+  /* Tags */
+  element_single_role_tag_friendly.disabled = false;
+  element_single_role_tag_setup.disabled = false;
+  element_single_role_tag_preserve.disabled = false;
+  element_single_role_tag_friendly.classList.remove("disabled");
+  element_single_role_tag_setup.classList.remove("disabled");
+  element_single_role_tag_preserve.classList.remove("disabled");
+
   /* Role type */
   const is_item = role.type === "Item";
   const is_prompt = role.type === "Prompt";
@@ -692,6 +814,31 @@ function editor_enable_check() {
   element_single_role_tag_friendly.classList.toggle("disabled", is_item || is_prompt);
   element_single_role_tag_setup.classList.toggle("disabled", is_item || is_prompt);
   element_single_role_tag_preserve.classList.toggle("disabled", is_item || is_prompt);
+
+  /* Vanilla roles (disable EVERYTHING) */
+  if (role.is_vanilla) {
+    element_single_role_name.disabled = true
+    element_single_role_toplabel.disabled = true
+    element_single_role_ability1_type.disabled = true
+    element_single_role_ability1_name.disabled = true
+    element_single_role_ability1_icon.classList.add("disabled");
+    element_single_role_ability1.disabled = true
+    element_single_role_ability2_type.disabled = true
+    element_single_role_ability2_name.disabled = true
+    element_single_role_ability2_icon.classList.add("disabled");
+    element_single_role_ability2.disabled = true
+    element_single_role_icon.disabled = true
+    element_single_role_type.disabled = true
+    element_single_role_activate.disabled = true
+    element_single_role_format.disabled = true
+    /* Tags */
+    element_single_role_tag_friendly.disabled = true;
+    element_single_role_tag_setup.disabled = true;
+    element_single_role_tag_preserve.disabled = true;
+    element_single_role_tag_friendly.classList.add("disabled");
+    element_single_role_tag_setup.classList.add("disabled");
+    element_single_role_tag_preserve.classList.add("disabled");
+  }
 }
 
 /* -------------------[ Clear Formatted Icon Cache ]------------------- */
@@ -846,7 +993,7 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
       ctx.font = `${bodySize}px TGPBody, sans-serif`;
       ctx.textAlign = "left";
       /* +6 for the y position is kind of cheating, but if it becomes an issue I'll improve it later. It's just because of weird font sizing. */
-      export_cards_wrap_justify(ctx, role.ability1 || "", textX + abilityIconSize + gap, abilityY + bodySize + 6, width - abilityIconSize - iconSize - bodySize - gap, bodySize * 1.35, false);
+      export_cards_wrap_justify(ctx, role.ability2 || "", textX + abilityIconSize + gap, abilityY + bodySize + 6, width - abilityIconSize - iconSize - bodySize - gap, bodySize * 1.35, false);
     }
   }
 }
@@ -1406,6 +1553,7 @@ function data_history_focus(element) {
 /* Reminder to self: absolutely must use async when making confirm modals pop up within functions! */
 function modal_show(message, showCancel = false) {
   element_modal.main.classList.remove("hidden");
+  element_modal.ok.classList.remove("hidden");
   element_modal.msg.textContent = message;
   element_modal.cancel.style.display = showCancel ? "inline-block" : "none";
 }
@@ -1423,6 +1571,86 @@ function modal_show_confirm(message) {
     element_modal.cancel.addEventListener("click", () => { element_modal.main.classList.add("hidden"); resolve(false); }, { once: true });
   });
 }
+/* Choose new role or vanilla role */
+async function modal_show_add_role() {
+  return new Promise((resolve) => {
+    element_modal.add_role.classList.remove("hidden");
+    element_modal.main.classList.remove("hidden");
+    element_modal.ok.classList.add("hidden");
+    const cleanup = () => {
+      element_modal.main.classList.add("hidden");
+      element_modal.add_role.classList.add("hidden");
+      element_modal.new_role.removeEventListener("click", onNew);
+      element_modal.load_vanilla.removeEventListener("click", onVanilla);
+      element_modal.cancel.removeEventListener("click", onCancel);
+    };
+    const onNew = () => {
+      cleanup();
+      resolve("new");
+    };
+    const onVanilla = () => {
+      cleanup();
+      resolve("vanilla");
+    };
+    const onCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+    element_modal.new_role.addEventListener("click", onNew);
+    element_modal.load_vanilla.addEventListener("click", onVanilla);
+    element_modal.cancel.addEventListener("click", onCancel);
+  });
+}
+/* Select vanilla role */
+async function modal_show_vanilla_selector(vanilla_roles) {
+  element_modal.ok.classList.remove("hidden");
+  return new Promise((resolve) => {
+    const select = element_modal.vanilla_select;
+    select.innerHTML = "";
+    vanilla_roles.forEach((role, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = role.name || "Unnamed Role";
+      select.appendChild(option);
+    });
+
+    select.value = "0";
+    update_vanilla_icon(vanilla_roles, select);
+    select.onchange = () => { update_vanilla_icon(vanilla_roles, select); };
+
+    element_modal.vanilla_select_container.classList.remove("hidden");
+    element_modal.main.classList.remove("hidden");
+    const cleanup = () => {
+      element_modal.main.classList.add("hidden");
+      element_modal.vanilla_select_container.classList.add("hidden");
+      element_modal.ok.removeEventListener("click", onOK);
+      element_modal.cancel.removeEventListener("click", onCancel);
+    };
+    const onOK = () => {
+      const role = vanilla_roles[Number(select.value)] || null;
+      cleanup();
+      resolve(role);
+    };
+    const onCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+    element_modal.ok.addEventListener("click", onOK);
+    element_modal.cancel.addEventListener("click", onCancel);
+  });
+}
+/* Update the display icon for which vanilla role has been selected */
+function update_vanilla_icon(vanilla_roles, select) {
+  const role = vanilla_roles[Number(select.value)];
+  if (!role || !role.icon) {
+    element_modal.vanilla_icon.src = "";
+    element_modal.vanilla_icon.style.display = "none";
+    return;
+  }
+  element_modal.vanilla_icon.src = role.icon;
+  element_modal.vanilla_icon.style.display = "block";
+}
+
 
 /* -------------------[ Event Listeners ]------------------- */
 
@@ -1455,6 +1683,7 @@ element_single_role_name.addEventListener("input", function () {
     if (!role) return;
     role.name = this.value;
   }
+  data_roles_edited();
   sidebar_render();
   editor_unsaved();
 });
@@ -1465,6 +1694,7 @@ element_single_role_activate.addEventListener("input", function () {
   const role = data_roles_get();
   if (!role) return;
   role.activate = this.value;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1474,6 +1704,7 @@ element_single_role_toplabel.addEventListener("input", function () {
   const role = data_roles_get();
   if (!role) return;
   role.toplabel = this.value;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1483,6 +1714,7 @@ element_single_role_ability1.addEventListener("input", function () {
   const role = data_roles_get();
   if (!role) return;
   role.ability1 = this.value;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1492,6 +1724,7 @@ element_single_role_ability2.addEventListener("input", function () {
   const role = data_roles_get();
   if (!role) return;
   role.ability2 = this.value;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1508,6 +1741,7 @@ element_single_role_icon.addEventListener("change", function () {
     /* Set new icon */
     role.icon = icon;
     editor_icon_render(icon);
+    data_roles_edited();
     sidebar_render();
     editor_unsaved();
   });
@@ -1525,6 +1759,7 @@ element_single_role_type.addEventListener("change", function () {
   data_roles_format_cache_clear(role.id);
   /* Update everything else */
   editor_icon_render(role.icon);
+  data_roles_edited();
   sidebar_render();
   editor_unsaved();
   /* Update input and textarea highlight colour */
@@ -1543,6 +1778,7 @@ element_single_role_ability1_type.addEventListener("change", function () {
   role.ability1_icon = this.value;
   element_single_role_ability1_icon.src = editor_ability_icon_order[this.value];
   editor_enable_check();
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1554,6 +1790,7 @@ element_single_role_ability2_type.addEventListener("change", function () {
   role.ability2_icon = this.value;
   element_single_role_ability2_icon.src = editor_ability_icon_order[this.value];
   editor_enable_check();
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1563,6 +1800,7 @@ element_single_role_ability1_name.addEventListener("input", function () {
   const role = data_roles_get();
   if (!role) return;
   role.ability1_name = this.value;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1572,6 +1810,7 @@ element_single_role_ability2_name.addEventListener("input", function () {
   const role = data_roles_get();
   if (!role) return;
   role.ability2_name = this.value;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1581,6 +1820,7 @@ element_single_role_tag_friendly.addEventListener("change", function () {
   if (!role) return;
   data_history_push();
   role.tag_friendly = this.checked;
+  data_roles_edited();
   editor_unsaved();
 });
 element_single_role_tag_setup.addEventListener("change", function () {
@@ -1588,6 +1828,7 @@ element_single_role_tag_setup.addEventListener("change", function () {
   if (!role) return;
   data_history_push();
   role.tag_setup = this.checked;
+  data_roles_edited();
   editor_unsaved();
 });
 element_single_role_tag_preserve.addEventListener("change", function () {
@@ -1595,6 +1836,7 @@ element_single_role_tag_preserve.addEventListener("change", function () {
   if (!role) return;
   data_history_push();
   role.tag_preserve = this.checked;
+  data_roles_edited();
   editor_unsaved();
 });
 
@@ -1621,7 +1863,7 @@ element_editor_project_icon_input.addEventListener("change", function () {
 });
 
 /* Makes the "Add Role" button clickable to add a new role */
-element_sidebar_add.addEventListener("click", data_roles_add);
+element_sidebar_add.addEventListener("click", data_roles_add_modal);
 
 /* Makes the "Save" button clickable to save all data to local storage */
 element_sidebar_save.addEventListener("click", () => {
@@ -1666,6 +1908,7 @@ element_single_role_format.addEventListener("click", function () {
   role.format = !role.format;
   this.classList.toggle("on", role.format);
   editor_icon_render(role.icon);
+  data_roles_edited();
   sidebar_render();
   editor_unsaved();
 });
@@ -1724,6 +1967,7 @@ element_editor_icon_upload.addEventListener("drop", (e) => {
     /* Set new icon */
     role.icon = icon;
     editor_icon_render(icon);
+    data_roles_edited();
     sidebar_render();
     editor_unsaved();
   });
@@ -1742,7 +1986,6 @@ element_editor_project_icon_upload.addEventListener("drop", (e) => {
 window.addEventListener("beforeunload", function (e) {
   if (!data_saved) {
     e.preventDefault();
-    e.returnValue = "";
   }
 });
 
@@ -1775,7 +2018,7 @@ window.addEventListener("keydown", function (e) {
   /* Ctrl + Enter (Add new role) */
   if (key_ctrl && e.key.toLowerCase() === "enter") {
     e.preventDefault();
-    data_roles_add();
+    data_roles_add_new();
     return;
   }
 

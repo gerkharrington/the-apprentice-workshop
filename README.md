@@ -82,3 +82,5 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 ⠀ ↳ Modifying default content included in the site does not give you rights for it. All rights are reserved for any content the site grants access to, including (but not limited to) art and text.\
 ⠀ ↳ Custom roles are stored locally on your computer and never uploaded to the cloud.
 </details>
+
+This tool is designed to work on all major browsers and operating systems. Screen reader support is available but not recommended.

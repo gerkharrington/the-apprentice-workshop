@@ -68,7 +68,8 @@
       <div>
         <!-- Export Options-->
         <button id="editor_project_export_cards" class="editor_button editor_project_button">Export Card Images</button>
-        <button id="editor_project_export_sheet" class="editor_button editor_project_button">Export Scenario Sheet</button>
+        <button id="editor_project_export_sheet" class="editor_button editor_project_button">Export Scenario
+          Sheet</button>
         <button id="editor_project_export_json" class="editor_button editor_project_button">Export JSON</button>
         <!-- Import Options -->
         <button id="editor_project_import_json" class="editor_button editor_project_button">Import JSON</button>
@@ -101,8 +102,11 @@
           <!-- Right Side - Bottom Row -->
           <div class="editor_input_top_right_bottom">
             <!-- Role Name Input -->
+            <div class="editor_name_container">
+            <div id="editor_marker" class="editor_marker">★ Vanilla roles should not be edited</div>
             <label for="single_role_name" class="fake_hidden">Role Name Input</label>
             <input id="single_role_name" class="editor_input_name" placeholder="Role Name" type="text">
+            </div>
             <!-- Role Type Input -->
             <select id="single_role_type">
               <option value="Guest">Guest</option>
@@ -166,7 +170,19 @@
   <div id="modal" class="modal hidden">
     <div class="modal_box">
       <div id="modal_message" class="modal_message"></div>
-      <div class="modal_buttons">
+      <!-- Add Role / Card -->
+      <div id="modal_add_role" class="modal_add_role hidden">
+        <div class="modal_add_role_buttons modal_button">
+          <button id="modal_new_role">New Role</button>
+          <button id="modal_load_vanilla">Load Vanilla Role</button>
+        </div>
+      </div>
+      <!-- Vanilla Role Selector -->
+      <div id="modal_vanilla_select_container" class="modal_vanilla_select_container hidden">
+        <img id="modal_vanilla_icon" class="modal_vanilla_icon" src="" alt="">
+        <select id="modal_vanilla_select" class="modal_vanilla_select"></select>
+      </div>
+      <div class="modal_button">
         <button id="modal_cancel">Cancel</button>
         <button id="modal_ok">✓ Okay</button>
       </div>
