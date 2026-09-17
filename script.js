@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.19.0";
+const site_version = "0.19.1";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -203,7 +203,7 @@ const element_editor_input = document.getElementById("editor_input");
 const element_editor_icon_preview = document.getElementById("editor_icon_preview");
 const element_editor_icon_upload = document.getElementById("editor_icon_upload");
 const element_editor_icon_placeholder = document.getElementById("editor_icon_placeholder");
-const element_editor_card_preview = document.getElementById("editor_card_preview");
+const element_editor_card = document.getElementById("editor_card");
 const element_editor_footer_year = document.getElementById("editor_footer_year");
 const element_editor_footer_version = document.getElementById("editor_footer_version");
 const element_editor_project = document.getElementById("editor_project");
@@ -638,7 +638,7 @@ function data_roles_delete(element) {
 function data_roles_edited() {
   const role = data_roles_get();
   if (!role) return;
-  editor_card_preview_render();
+  editor_card_render();
   if (!role.is_vanilla) return;
   role.is_vanilla = false;
 }
@@ -676,7 +676,7 @@ function data_roles_load() {
   const colour_dark = data_css.getPropertyValue(colour_array_dark[role.type] || "--type_guest_dark").trim();
   document.documentElement.style.setProperty("--type_selected_dark", colour_dark);
   editor_enable_check();
-  editor_card_preview_render();
+  editor_card_render();
 }
 
 /* -------------------[ Mark Data As Unsaved ]------------------- */
@@ -729,7 +729,7 @@ function editor_icon_upload(file, onSuccess) {
   const editor_file_reader = new FileReader();
   editor_file_reader.onload = async function (e) {
     const image = new Image();
-    image.crossOrigin = "anonymous";
+    /*image.crossOrigin = "anonymous";*/
     image.src = e.target.result;
     image.onerror = function () { modal_show_alert("Failed to load file! Please try another file.\nError A-3: Unknown - browser failed to decode image."); };
     image.onload = function () {
@@ -896,7 +896,7 @@ function data_roles_format_cache_clear(roleId) {
 /* -------------------[ Role Icon Formatting ]------------------- */
 function data_roles_format(imageSrc, roleType, callback) {
   const icon = new Image();
-  icon.crossOrigin = "anonymous";
+  /*icon.crossOrigin = "anonymous";*/
   icon.onload = () => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -1045,21 +1045,21 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
 }
 
 /* -------------------[ Render Card Preview ]------------------- */
-async function editor_card_preview_render() {
+async function editor_card_render() {
   const role = data_roles_get();
   if (!role) {
-    element_editor_card_preview.src = "";
-    element_editor_card_preview.style.display = "none";
+    element_editor_card.src = "";
+    element_editor_card.style.display = "none";
     return;
   }
   try {
     const pngData = await export_cards_render(role, 0.15);
-    element_editor_card_preview.src = pngData;
-    element_editor_card_preview.style.display = "block";
+    element_editor_card.src = pngData;
+    element_editor_card.style.display = "block";
   } catch (err) {
     console.error("Failed to render card preview:", err);
-    element_editor_card_preview.src = "";
-    element_editor_card_preview.style.display = "none";
+    element_editor_card.src = "";
+    element_editor_card.style.display = "none";
   }
 }
 
@@ -1079,6 +1079,7 @@ async function export_cards() {
 
 /* -------------------[ Render Role Card (Main) ]------------------- */
 async function export_cards_render(role, s = 1) {
+
   return new Promise(async (resolve) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -1258,6 +1259,7 @@ async function export_cards_render(role, s = 1) {
     }
     resolve(canvas.toDataURL("image/png"));
   });
+
 }
 
 /* -------------------[ Render Role Card (Full Border) ]------------------- */
@@ -1387,7 +1389,7 @@ async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y
 function export_cards_load_image(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    /*img.crossOrigin = "anonymous";*/
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
