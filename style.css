@@ -761,7 +761,16 @@
 
     .editor_card {
       display: block;
-      max-height: calc(var(--height_main)*2);
+      position: absolute;
+      bottom: var(--margin_small);
+      height: calc(var(--height_main)*2.2);
+    }
+
+    .editor_delete {
+      display: block;
+      position: absolute;
+      right: var(--margin_small);
+      bottom: var(--margin_small);
     }
 
     /* -------------------[ Modal Style ]------------------- */

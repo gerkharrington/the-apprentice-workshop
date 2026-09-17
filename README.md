@@ -28,15 +28,20 @@ https://gerkharrington.github.io/the-apprentice-workshop/
  ⠀↳ Deletes the currently selected role, skipping the confirmation.\
  ⠀↳ This is useful for getting rid of lots of roles quickly.\
  ⠀↳ If you accidentally delete something, reload the page (so long as it hasn't been saved over).\
-🗑️ <b>Ctrl+Minus</b>\
+🗑️ <b>Ctrl+Shift+Backslash</b>\
 ⠀ ↳ Deletes the icon from the currently selected role.\
 ⠀ ↳ Can also be used to remove the icon from Project Details.\
 ⬆️ <b>Ctrl+Up</b>\
 ⠀ ↳ Moves the selected role a space upwards in the list.\
 ⬇️ <b>Ctrl+Down</b>\
 ⠀ ↳ Moves the selected role a space downwards in the list.\
-📚 <b>Ctrl+Equals</b>\
+📚 <b>Ctrl+K</b>\
 ⠀ ↳ Duplicate the currently selected role.\
+⠀ ↳ This can allow you to create an editable copy of roles.\
+⚠️ <b>Ctrl+Shift+M</b>\
+⠀ ↳ Forcibly enables all disabled input areas.\
+⠀ ↳ This can allow you to edit roles which otherwise can't be edited.\
+⠀ ↳ Can also be used to bypass certain restrictions, like entering ability text without selecting an icon.\
 📛 <b>Slash</b>\
  ⠀↳ Quickly jump to the role name input area.\
 1️⃣ <b>Number 1</b>\

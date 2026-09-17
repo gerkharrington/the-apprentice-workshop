@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.19.2";
+const site_version = "0.19.3";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -188,6 +188,7 @@ const element_single_role_tag_friendly = document.getElementById("single_role_ta
 const element_single_role_tag_setup = document.getElementById("single_role_tag_setup");
 const element_single_role_tag_preserve = document.getElementById("single_role_tag_preserve");
 const element_single_role_format = document.getElementById("single_role_format");
+const element_single_role_delete = document.getElementById("single_role_delete");
 const element_sidebar_main = document.getElementById("sidebar_main");
 const element_sidebar_list = document.getElementById("sidebar_list");
 const element_sidebar_project = document.getElementById("sidebar_project");
@@ -226,7 +227,7 @@ async function data_roles_vanilla_load() {
     return data_roles_vanilla;
   }
   try {
-    const response = await fetch("assets/vanilla_roles.json");
+    const response = await fetch("assets/vanilla_roles/all.json");
     if (!response.ok) {
       modal_show_alert("Failed to vanilla roles!\nError C-1: Missed response."); return;
     }
@@ -314,7 +315,7 @@ function sidebar_render() {
       }
 
       /* Delete button for this role */
-      const sidebar_delete = document.createElement("button");
+      /*const sidebar_delete = document.createElement("button");
       sidebar_delete.classList.add("hidden");
       sidebar_delete.textContent = "-";
       sidebar_delete.setAttribute("aria-label", "Delete Role");
@@ -325,10 +326,9 @@ function sidebar_render() {
         const element = e.target.closest(".sidebar_entry");
         data_roles_delete(element);
       };
-
       if (role.id === sidebar_selected) {
         sidebar_delete.classList.remove("hidden");
-      }
+      }*/
 
       const container = document.createElement("div");
       container.className = "sidebar_container";
@@ -359,7 +359,7 @@ function sidebar_render() {
       div.appendChild(marker);
 
       /* This is the order of how everything displays in one sidebar slot */
-      div.appendChild(sidebar_delete);
+      /*div.appendChild(sidebar_delete);*/
       div.appendChild(container);
       div.appendChild(name);
 
@@ -798,12 +798,11 @@ function editor_ability_icon_init(select) {
   });
 }
 
-/* -------------------[ Check To Enable / Disable Ability Inputs ]------------------- */
-function editor_enable_check() {
+/* -------------------[ Force Enable All Inputs ]------------------- */
+function editor_enable_force() {
   const role = data_roles_get();
   if (!role) return;
 
-  /* Enable everyting first*/
   element_single_role_name.disabled = false
   element_single_role_toplabel.disabled = false
   element_single_role_ability1_type.disabled = false
@@ -818,13 +817,23 @@ function editor_enable_check() {
   element_single_role_type.disabled = false
   element_single_role_activate.disabled = false
   element_single_role_format.disabled = false
-  /* Tags */
+
   element_single_role_tag_friendly.disabled = false;
   element_single_role_tag_setup.disabled = false;
   element_single_role_tag_preserve.disabled = false;
   element_single_role_tag_friendly.classList.remove("disabled");
   element_single_role_tag_setup.classList.remove("disabled");
   element_single_role_tag_preserve.classList.remove("disabled");
+
+}
+
+/* -------------------[ Check To Enable / Disable Ability Inputs ]------------------- */
+function editor_enable_check() {
+  const role = data_roles_get();
+  if (!role) return;
+
+  /* Enable everyting first*/
+  editor_enable_force();
 
   /* Role type */
   const is_item = role.type === "Item";
@@ -1407,6 +1416,7 @@ function export_cards_rescale_centre(ctx, text, x, y, maxWidth, initialFontSize,
     fontSize -= 1;
   }
   ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
   ctx.fillText(text, x, y);
 }
 function export_cards_wrap_justify(ctx, text, x, y, maxWidth, lineHeight, onCard) {
@@ -1579,13 +1589,13 @@ function data_history_restore(snapshot) {
   sidebar_mode = parsed.mode || "role";
   data_history_last = snapshot;
   data_roles_icon_cache.clear();
-  sidebar_render();
   if (sidebar_mode === "project") {
     editor_project_open();
   } else {
     data_roles_load();
     element_editor_project.classList.add("hidden");
   }
+  sidebar_render();
   editor_unsaved();
 }
 function data_history_push() {
@@ -1623,6 +1633,7 @@ function data_history_focus(element) {
 function modal_show(message, showCancel = false) {
   element_modal.main.classList.remove("hidden");
   element_modal.ok.classList.remove("hidden");
+  element_modal.msg.classList.remove("hidden");
   element_modal.msg.textContent = message;
   element_modal.cancel.style.display = showCancel ? "inline-block" : "none";
 }
@@ -1630,7 +1641,6 @@ function modal_show_alert(message) {
   return new Promise((resolve) => {
     modal_show(message, false);
     element_modal.ok.addEventListener("click", () => { element_modal.main.classList.add("hidden"); resolve(true); }, { once: true });
-    element_modal.cancel.addEventListener("click", () => { element_modal.main.classList.add("hidden"); resolve(false); }, { once: true });
   });
 }
 function modal_show_confirm(message) {
@@ -1646,6 +1656,8 @@ async function modal_show_add_role() {
     element_modal.add_role.classList.remove("hidden");
     element_modal.main.classList.remove("hidden");
     element_modal.ok.classList.add("hidden");
+    element_modal.msg.classList.add("hidden");
+    element_modal.cancel.style.display = "inline-block";
     const cleanup = () => {
       element_modal.main.classList.add("hidden");
       element_modal.add_role.classList.add("hidden");
@@ -1982,6 +1994,17 @@ element_single_role_format.addEventListener("click", function () {
   editor_unsaved();
 });
 
+/* Makes the button clickable to delete a role */
+element_single_role_delete.onclick = async (e) => {
+  e.stopPropagation();
+  if (sidebar_selected === null) return;
+  const role = data_roles_get(); if (!role) return;
+  const ok = await modal_show_confirm("Delete this role?"); if (!ok) return;
+  const element = document.querySelector(".sidebar_entry.selected"); if (!element) return;
+
+  data_roles_delete(element);
+};
+
 /* Makes the button clickable to open project metadata editor */
 element_sidebar_project.addEventListener("click", () => {
   editor_project_open();
@@ -2102,13 +2125,15 @@ window.addEventListener("keydown", function (e) {
     return;
   }
 
-  /* Ctrl + Minus (Delete role / project icon) */
-  if (key_ctrl && e.key === "-") {
+  /* Ctrl + Shift + Backslash (Delete role / project icon) */
+  if (key_ctrl && e.key === "\\" && e.shiftKey) {
     e.preventDefault();
     if (sidebar_mode === "role" && sidebar_selected !== null) {
       const role = data_roles_get();
-      if (!role) return;
+      if (!role.icon) return;
+      if (role.is_vanilla) return;
       data_history_push();
+      data_roles_format_cache_clear(role.id);
       role.icon = "";
       editor_icon_render("");
       sidebar_render();
@@ -2116,6 +2141,7 @@ window.addEventListener("keydown", function (e) {
       return;
     }
     if (sidebar_mode === "project") {
+      if (!data_project.icon) return;
       data_history_push();
       data_project.icon = "";
       editor_project_icon_render("");
@@ -2128,9 +2154,9 @@ window.addEventListener("keydown", function (e) {
   if (key_ctrl && e.key.toLowerCase() === "arrowup") {
     e.preventDefault();
     if (sidebar_selected === null) return;
-    data_history_push();
     const index = data_roles.findIndex(r => r.id === sidebar_selected);
     if (index <= 0) return;
+    data_history_push();
     [data_roles[index - 1], data_roles[index]] = [data_roles[index], data_roles[index - 1]];
     sidebar_render();
     editor_unsaved();
@@ -2141,21 +2167,20 @@ window.addEventListener("keydown", function (e) {
   if (key_ctrl && e.key.toLowerCase() === "arrowdown") {
     e.preventDefault();
     if (sidebar_selected === null) return;
-    data_history_push();
     const index = data_roles.findIndex(r => r.id === sidebar_selected);
     if (index === -1 || index >= data_roles.length - 1) return;
+    data_history_push();
     [data_roles[index + 1], data_roles[index]] = [data_roles[index], data_roles[index + 1]];
     sidebar_render();
     editor_unsaved();
     return;
   }
 
-  /* Ctrl + Equals (Duplicate role) */
-  if (key_ctrl && (e.key === "=" || e.key.toLowerCase() === "equal")) {
+  /* Ctrl + K (Duplicate role) */
+  if (key_ctrl && (e.key.toLowerCase() === "k")) {
     e.preventDefault();
     const role = data_roles_get();
     if (!role) return;
-    data_history_push();
     const clone = typeof structuredClone === "function" ? structuredClone(role) : JSON.parse(JSON.stringify(role));
     clone.id = data_roles_uuid();
     /* Count existing copies */
@@ -2167,12 +2192,21 @@ window.addEventListener("keydown", function (e) {
     } else {
       clone.name = role.name + " Copy";
     }
+    clone.is_vanilla = false;
     const index = data_roles.findIndex(r => r.id === sidebar_selected);
+    if (index === -1) return;
     data_roles.splice(index + 1, 0, clone);
     sidebar_selected = clone.id;
     sidebar_render();
     data_roles_load();
     editor_unsaved();
+  }
+
+  /* Ctrl + Shift + M (Force enable editing of areas which really shouldn't be enabled) */
+  if (key_ctrl && e.key.toLowerCase() === "m" && e.shiftKey) {
+    e.preventDefault();
+    modal_show_alert("Disabled inputs have been unlocked through a keyboard shortcut. Editing this role could cause issues unless you know what you're doing. Click off this role and back on again to return to a safe version.");
+    editor_enable_force();
   }
 
   /* Slash (Focus on role name input) */
