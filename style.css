@@ -135,6 +135,11 @@
     span,
     h2 {
       user-select: none;
+      -webkit-user-drag: none;
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
     }
 
     /* Body text */
@@ -143,7 +148,7 @@
       display: flex;
       min-height: 100vh;
       min-height: 100dvh;
-      overflow: hidden;
+      overflow-x: hidden;
       background: var(--black);
       color: var(--white);
       animation: animation_blur_in var(--transition_long);
@@ -236,6 +241,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
+      white-space: nowrap;
     }
 
     /* -------------------[ Hidden Elements ]------------------- */
@@ -595,6 +601,7 @@
       color: var(--light_grey);
       font-size: var(--size_small);
       line-height: 1;
+      white-space: nowrap;
     }
 
     .editor_input {
@@ -759,18 +766,33 @@
       color: var(--white);
     }
 
-    .editor_card {
-      display: block;
+    .editor_input_bottom_bottom_bottom {
+      display: flex;
       position: absolute;
-      bottom: var(--margin_small);
+      bottom: calc(var(--margin_main) * 2);
+      left: var(--margin_main);
+      right: calc(var(--margin_main) * 2);
+      transition: var(--transition_short);
       height: calc(var(--height_main)*2.2);
+
+    }
+
+    .editor_main.expanded .editor_input_bottom_bottom_bottom {
+      left: calc(var(--width_main) + var(--margin_main));
+    }
+
+    .editor_card {
+      margin-right: auto;
+      margin-left: var(--margin_main);
     }
 
     .editor_delete {
-      display: block;
-      position: absolute;
-      right: var(--margin_small);
-      bottom: var(--margin_small);
+      margin-left: auto;
+      margin-top: auto;
+    }
+
+    .editor_scrollspace {
+      height: calc(var(--height_main)*2.2);
     }
 
     /* -------------------[ Modal Style ]------------------- */

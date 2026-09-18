@@ -92,3 +92,4 @@ https://gerkharrington.github.io/the-apprentice-workshop/
 
 This tool is designed to work on all major browsers and operating systems.
 Screen reader support is available but not recommended.
+Needs testing on Safari and Firefox.

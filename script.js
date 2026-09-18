@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.19.3";
+const site_version = "0.20.0";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -1121,7 +1121,7 @@ async function export_cards_render(role, s = 1) {
     /* Cut out bottom corners to make room for activate order number & role tag icons */
     ctx.fillStyle = data_css.getPropertyValue("--black").trim();
     ctx.shadowColor = data_css.getPropertyValue("--black").trim();
-    const cutoutSize = (borderDistance * 3) + headerSize;
+    let cutoutSize = (borderDistance * 3) + headerSize;
     const cutoutY = canvas.height - cutoutSize;
     if (role.activate) {
       let cutoutX = 0;
@@ -1138,6 +1138,7 @@ async function export_cards_render(role, s = 1) {
     }
     if (role.tag_setup || role.tag_preserve) {
       let cutoutX = canvas.width - cutoutSize;
+      if (role.tag_setup && role.tag_preserve) {cutoutX -= cutoutSize; cutoutSize *= 2;}
       ctx.shadowBlur = 100;
       ctx.fillRect(cutoutX, cutoutY, cutoutSize, cutoutSize);
       ctx.shadowBlur = 200;
