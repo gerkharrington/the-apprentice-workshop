@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.20.0";
+const site_version = "0.20.1";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
