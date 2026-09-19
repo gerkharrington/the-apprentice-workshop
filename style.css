@@ -768,10 +768,6 @@
 
     .editor_input_bottom_bottom_bottom {
       display: flex;
-      position: absolute;
-      bottom: calc(var(--margin_main) * 2);
-      left: var(--margin_main);
-      right: calc(var(--margin_main) * 2);
       transition: var(--transition_short);
       height: calc(var(--height_main)*2.2);
 
@@ -792,7 +788,7 @@
     }
 
     .editor_scrollspace {
-      height: calc(var(--height_main)*2.2);
+      height: calc(var(--height_main)*4);
     }
 
     /* -------------------[ Modal Style ]------------------- */
