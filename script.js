@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.20.2";
+const site_version = "0.20.3";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -229,16 +229,16 @@ async function data_roles_vanilla_load() {
   try {
     const response = await fetch("assets/vanilla_roles/all.json");
     if (!response.ok) {
-      modal_show_alert("Failed to vanilla roles!\nError C-1: Missed response."); return;
+      modal_show_alert("Failed to load vanilla roles!\nError C-1: Missed response."); return null;
     }
     const parsed = await response.json();
     if (!Array.isArray(parsed)) {
-      modal_show_alert("Failed to vanilla roles!\nError C-2: Role data is not loaded as an array."); return;
+      modal_show_alert("Failed to load vanilla roles!\nError C-2: Role data is not loaded as an array."); return null;
     }
     data_roles_vanilla = parsed;
     return data_roles_vanilla;
   } catch (err) {
-    modal_show_alert("Failed to vanilla roles!\nError C-3: Failed."); return;
+    modal_show_alert("Failed to load vanilla roles!\nError C-3: Failed."); return null;
   }
 }
 
@@ -447,6 +447,8 @@ function export_json() {
       const value = key === "icon" ? icon_override : role[key];
       /* Compare with site_roles_default (we only need to export values that are not the default (ie, they have been changed by the user)) */
       if (value === site_roles_default[key]) return;
+      /* If this is a vanilla role, we don't need ANYTHING except the name */
+      if (role.is_vanilla && !(key === "name" || key === "is_vanilla")) return;
       /* If all checks pass, this is a value we will export */
       export_role[key] = value;
     });
@@ -491,41 +493,60 @@ function export_json() {
 }
 
 /* -------------------[ Import From JSON ]------------------- */
-function import_json(file) {
+async function import_json(file) {
   if (!file) return;
   const sidebar_file_reader = new FileReader();
-  sidebar_file_reader.onload = function (e) {
+  sidebar_file_reader.onload = async function (e) {
     try {
       /* Convert JSON data to a readable object */
       const parsed = JSON.parse(e.target.result);
       let imported_roles = parsed;
       let imported_project = {};
-      if (!Array.isArray(parsed)) {
-        imported_roles = parsed.roles || [];
-        imported_project = parsed.project || {};
-      }
-      if (!Array.isArray(imported_roles)) {
-        return;
-      }
+      if (!Array.isArray(parsed)) { imported_roles = parsed.roles || []; imported_project = parsed.project || {}; }
+      if (!Array.isArray(imported_roles)) { return; }
       if (imported_roles.length > 1000) { modal_show_alert("Failed to load file!\nError B-5: Too many roles at once."); return; }
-
+      /* Load the data for vanilla roles if we need to */
+      let vanilla_roles = [];
+      if (imported_roles.some(role => role.is_vanilla === true)) {
+        vanilla_roles = await data_roles_vanilla_load();
+        if (!Array.isArray(vanilla_roles)) { return; }
+      }
       data_history_push();
-
-      /* Set all the data */
-      const clone = typeof structuredClone === "function" ? structuredClone(site_roles_default) : JSON.parse(JSON.stringify(site_roles_default));
-      data_roles = imported_roles.map(role => ({
-        ...clone,
-        ...role,
-        id: data_roles_uuid()
-      }));
-      data_project = typeof structuredClone === "function" ? structuredClone({ ...site_project_default, ...imported_project }) : JSON.parse(JSON.stringify({ ...site_project_default, ...imported_project }));
+      const clone = typeof structuredClone === "function"
+        ? structuredClone(site_roles_default)
+        : JSON.parse(JSON.stringify(site_roles_default));
+      data_roles = imported_roles.map(role => {
+        let role_data = role;
+        if (role.is_vanilla === true) {
+          const vanilla_role = vanilla_roles.find(vanilla => vanilla.name === role.name);
+          if (vanilla_role) {
+            role_data = {
+              ...role,
+              ...vanilla_role
+            };
+          }
+        }
+        return {
+          ...clone,
+          ...role_data,
+          id: data_roles_uuid()
+        };
+      });
+      data_project = typeof structuredClone === "function"
+        ? structuredClone({ ...site_project_default, ...imported_project })
+        : JSON.parse(JSON.stringify({
+          ...site_project_default,
+          ...imported_project
+        }));
       /* Load everything else (now role data is done) */
       editor_unsaved();
       data_roles_icon_cache.clear();
       sidebar_render();
       editor_project_open();
     } catch (err) {
-      modal_show_alert("Failed to load file! Please try another file.\nError B-4: File JSON is invalid.");
+      modal_show_alert(
+        "Failed to load file! Please try another file.\nError B-4: File JSON is invalid."
+      );
     }
   };
   sidebar_file_reader.readAsText(file);
@@ -967,35 +988,76 @@ async function export_sheet() {
   /* Black background */
   ctx.fillStyle = data_css.getPropertyValue("--black").trim();
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  /* Render roles */
-  let x = padding;
-  let columnNumber = 0;
-  let y = padding;
-  for (let i = 0; i < data_roles.length; i++) {
-    const role = data_roles[i];
+  /* Separate guests and strangers from spirits */
+  /* 'Normal' roles means not spirits */
+  const normalRoles = data_roles.filter(role => (role.type || "").toLowerCase() !== "spirit");
+  const spiritRoles = data_roles.filter(role => (role.type || "").toLowerCase() === "spirit");
+  /* Calculate layout */
+  const hasCenteredNormalRole = normalRoles.length % 2 === 1;
+  const columnNormalCount = hasCenteredNormalRole ? normalRoles.length - 1 : normalRoles.length;
+  const normalRowsPerColumn = columnNormalCount / columns;
+  const normalRoleRows = hasCenteredNormalRole ? normalRowsPerColumn + 1 : normalRowsPerColumn;
+  const hasSpirits = spiritRoles.length > 0;
+  const hasCenteredSpirit = spiritRoles.length % 2 === 1;
+  const columnSpiritCount = hasCenteredSpirit ? spiritRoles.length - 1 : spiritRoles.length;
+  const spiritsPerColumn = hasSpirits ? columnSpiritCount / columns : 0;
+  const spiritRoleRows = hasSpirits ? spiritsPerColumn + (hasCenteredSpirit ? 1 : 0) : 0;
+  const gapRows = hasSpirits ? 1 : 0;
+  const totalRows = normalRoleRows + gapRows + spiritRoleRows;
+  const contentHeight = totalRows * rowHeight;
+  const startY = (canvas.height - contentHeight) / 2;
+  /* RENDER ROLES: NON-SPIRITS */
+  for (let i = 0; i < normalRoles.length; i++) {
+    const role = normalRoles[i];
+    if (hasCenteredNormalRole && i === 0) {
+      const x = (canvas.width - columnWidth) / 2;
+      const y = startY;
+      await export_sheet_role(ctx, role, x, y, columnWidth, rowHeight);
+      continue;
+    }
+    const columnIndex = i - (hasCenteredNormalRole ? 1 : 0);
+    const columnNumber = Math.floor(columnIndex / normalRowsPerColumn);
+    const rowNumber = columnIndex % normalRowsPerColumn;
+    const x = padding + columnNumber * (columnWidth + columnGap);
+    const y = startY + (rowNumber + (hasCenteredNormalRole ? 1 : 0)) * rowHeight;
     await export_sheet_role(ctx, role, x, y, columnWidth, rowHeight);
-    x += columnWidth + columnGap;
-    columnNumber++;
-    if (columnNumber >= columns) {
-      columnNumber = 0;
-      y += rowHeight;
-      x = padding;
+  }
+  /* RENDER ROLES: SPIRITS */
+  if (hasSpirits) {
+    const spiritStartY = startY + (normalRoleRows + gapRows) * rowHeight;
+    for (let i = 0; i < spiritRoles.length; i++) {
+      const role = spiritRoles[i];
+      if (hasCenteredSpirit && i === spiritRoles.length - 1) {
+        const x = (canvas.width - columnWidth) / 2;
+        const y = spiritStartY + spiritsPerColumn * rowHeight;
+        await export_sheet_role(ctx, role, x, y, columnWidth, rowHeight);
+        continue;
+      }
+      const columnNumber = Math.floor(i / spiritsPerColumn);
+      const rowNumber = i % spiritsPerColumn;
+      const x = padding + columnNumber * (columnWidth + columnGap);
+      const y = spiritStartY + rowNumber * rowHeight;
+      await export_sheet_role(ctx, role, x, y, columnWidth, rowHeight);
     }
   }
   /* Download file */
   const a = document.createElement("a");
   a.href = canvas.toDataURL("image/png");
-  a.download = data_filename_safe(data_project.name) + ".png"
+  a.download = data_filename_safe(data_project.name) + ".png";
   a.click();
 }
+
 async function export_sheet_role(ctx, role, x, y, width, height) {
+  /* Has two abilities? */
+  const hasTwoAbilities = role.ability1_icon && role.ability1_icon !== "none" && role.ability2_icon && role.ability2_icon !== "none";
   /* Rendering values */
   const iconSize = 180;
   const gap = 20;
+  const toplabelGap = gap / 2.8;
   const textX = x + iconSize + gap;
-  const bodySize = 25;
   const headerSize = 52;
-  const abilityIconSize = 75;
+  const bodySize = hasTwoAbilities ? (25/1.15):25;
+  const abilityIconSize = hasTwoAbilities ? (75/1.15):75;
   /* Role icon */
   let iconSrc = role.icon || null;
   if (role.icon && role.format) {
@@ -1020,9 +1082,54 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
   ctx.fillStyle = roleColours[role.type] || data_css.getPropertyValue("--white").trim();
   ctx.font = `${headerSize}px TGPHeader, sans-serif`;
   ctx.textAlign = "left";
+
+  /* Friendly Guests only display their name and toplabel */
+  if (role.tag_friendly === true) {
+    ctx.textAlign = "left";
+    ctx.font = `${headerSize}px TGPHeader, sans-serif`;
+    const nameMetrics = ctx.measureText(role.name || "");
+    const nameHeight = nameMetrics.actualBoundingBoxAscent + nameMetrics.actualBoundingBoxDescent;
+    let toplabelMetrics = null;
+    let toplabelHeight = 0;
+    if (role.toplabel) {
+      ctx.font = `${bodySize}px TGPBody, sans-serif`;
+      toplabelMetrics = ctx.measureText(role.toplabel);
+      toplabelHeight = toplabelMetrics.actualBoundingBoxAscent + toplabelMetrics.actualBoundingBoxDescent;
+    }
+    const friendlyLabelGap = gap;
+    const totalTextHeight = nameHeight + (role.toplabel ? friendlyLabelGap : 0) + toplabelHeight;
+    let nameY = y + ((iconSize - totalTextHeight) / 2) + nameMetrics.actualBoundingBoxAscent;
+    /* Render name */
+    ctx.font = `${headerSize}px TGPHeader, sans-serif`;
+    ctx.fillText(role.name || "", textX, nameY);
+    /* Render toplabel */
+    if (role.toplabel && toplabelMetrics) {
+      nameY += nameMetrics.actualBoundingBoxDescent + friendlyLabelGap + toplabelMetrics.actualBoundingBoxAscent;
+      ctx.font = `${bodySize}px TGPBody, sans-serif`;
+      ctx.fillStyle = data_css.getPropertyValue("--light_grey").trim();
+      ctx.fillText(role.toplabel, textX, nameY);
+    }
+    /* Stop the rendering for Friendly Guests here as they have no abilities */
+    return;
+  }
+  /* Render role name */
   ctx.fillText(role.name || "", textX, y + headerSize);
-  /* Ability 1 */
+  /* Height for abilities */
   let abilityY = y + headerSize + gap;
+  if (hasTwoAbilities) {
+    abilityY -= gap/2;
+  }
+  /* Top Label */
+  if (role.toplabel) {
+    ctx.font = `${bodySize}px TGPBody, sans-serif`;
+    ctx.textAlign = "left";
+    const toplabelY = y + headerSize + bodySize;
+    const toplabelHeight = export_cards_wrap_justify(ctx, role.toplabel, textX, toplabelY, width - iconSize - bodySize - gap, bodySize * 1.35, false);
+    /* export_cards_wrap_justify() uses an extra lineHeight when it returns a value which we don't want, so we remove it here. */
+    /* Then add only a small gap before Ability 1. */
+    abilityY = toplabelY - (bodySize + 6) + toplabelHeight - bodySize * 1.35 + toplabelGap;
+  }
+  /* Ability 1 */
   if (role.ability1_icon && role.ability1_icon !== "none") {
     const icon = editor_ability_icon_order[role.ability1_icon];
     if (icon) {
@@ -1035,7 +1142,7 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
       export_cards_wrap_justify(ctx, role.ability1 || "", textX + abilityIconSize + gap, abilityY + bodySize + 6, width - abilityIconSize - iconSize - bodySize - gap, bodySize * 1.35, false);
     }
   }
-  abilityY += bodySize * 1.35;
+  abilityY += abilityIconSize;
   /* Ability 2 */
   if (role.ability2_icon && role.ability2_icon !== "none") {
     const icon = editor_ability_icon_order[role.ability2_icon];
@@ -1138,7 +1245,7 @@ async function export_cards_render(role, s = 1) {
     }
     if (role.tag_setup || role.tag_preserve) {
       let cutoutX = canvas.width - cutoutSize;
-      if (role.tag_setup && role.tag_preserve) {cutoutX -= cutoutSize; cutoutSize *= 2;}
+      if (role.tag_setup && role.tag_preserve) { cutoutX -= cutoutSize; cutoutSize *= 2; }
       ctx.shadowBlur = 100;
       ctx.fillRect(cutoutX, cutoutY, cutoutSize, cutoutSize);
       ctx.shadowBlur = 200;
