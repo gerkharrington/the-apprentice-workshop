@@ -49,14 +49,14 @@
     /* -------------------[ Fonts ]------------------- */
     @font-face {
       font-family: 'TGPHeader';
-      src: url('assets/font/TGPHeader.otf') format('opentype');
+      src: url('assets/font/TGPHeader.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
     }
 
     @font-face {
       font-family: 'TGPBody';
-      src: url('assets/font/TGPBody.otf') format('opentype');
+      src: url('assets/font/TGPBody.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
     }
@@ -556,6 +556,12 @@
       margin-bottom: var(--margin_small);
     }
 
+    .editor_project_players {
+      height: var(--height_main);
+      width: var(--width_main);
+      margin-bottom: var(--margin_small);
+    }
+
     .editor_button {
       padding: 5px var(--padding_main);
       cursor: pointer;
@@ -606,7 +612,7 @@
 
     .editor_input {
       height: calc(var(--height_main)*2);
-      margin-bottom: var(--margin_main);
+      margin-bottom: var(--margin_small);
     }
 
     .editor_input_name {
@@ -779,7 +785,7 @@
 
     .editor_card {
       margin-right: auto;
-      margin-left: var(--margin_main);
+      margin-left: 0;
     }
 
     .editor_delete {
@@ -788,7 +794,7 @@
     }
 
     .editor_scrollspace {
-      height: calc(var(--height_main)*4);
+      height: calc(var(--height_main)*2.2);
     }
 
     /* -------------------[ Modal Style ]------------------- */

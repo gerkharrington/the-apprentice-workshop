@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.20.3";
+const site_version = "0.21.0";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -1056,8 +1056,8 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
   const toplabelGap = gap / 2.8;
   const textX = x + iconSize + gap;
   const headerSize = 52;
-  const bodySize = hasTwoAbilities ? (25/1.15):25;
-  const abilityIconSize = hasTwoAbilities ? (75/1.15):75;
+  const bodySize = hasTwoAbilities ? (25 / 1.15) : 25;
+  const abilityIconSize = hasTwoAbilities ? (75 / 1.15) : 75;
   /* Role icon */
   let iconSrc = role.icon || null;
   if (role.icon && role.format) {
@@ -1117,7 +1117,7 @@ async function export_sheet_role(ctx, role, x, y, width, height) {
   /* Height for abilities */
   let abilityY = y + headerSize + gap;
   if (hasTwoAbilities) {
-    abilityY -= gap/2;
+    abilityY -= gap / 2;
   }
   /* Top Label */
   if (role.toplabel) {
@@ -1353,7 +1353,8 @@ async function export_cards_render(role, s = 1) {
         canvas.width - ((paddingX + borderDistance) * 2) - iconSize - (columnGap * 2),
         headerSize,
         bodySize,
-        columnGap
+        columnGap,
+        (role.type == "Item")
       );
       currentY += heightDescend || 0;
     }
@@ -1369,7 +1370,8 @@ async function export_cards_render(role, s = 1) {
         canvas.width - ((paddingX + borderDistance) * 2) - iconSize - (columnGap * 2),
         headerSize,
         bodySize,
-        columnGap
+        columnGap,
+        (role.type == "Item")
       );
     }
     resolve(canvas.toDataURL("image/png"));
@@ -1467,7 +1469,7 @@ function export_cards_render_border_line(ctx, x, y, w, h, r, rng, wbl = 16) {
 }
 
 /* -------------------[ Render Role Card (Ability) ]------------------- */
-async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y, maxWidth, headerSize, bodySize, gap) {
+async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y, maxWidth, headerSize, bodySize, gap, isItem) {
   /* If ability icon is set to "none," skip it */
   if (!iconKey || iconKey === "none") return 0;
   /* Set up values */
@@ -1477,13 +1479,19 @@ async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y
   const iconSrc = editor_ability_icon_order[iconKey];
   if (iconSrc) {
     const icon = await export_cards_load_image(iconSrc);
-    ctx.drawImage(icon, x, y + (headerSize / 2), iconSize, iconSize);
+    if (isItem) {
+      ctx.drawImage(icon, x + (maxWidth / 2.4), y + (headerSize / 2), iconSize, iconSize);
+    } else {
+      ctx.drawImage(icon, x, y + (headerSize / 2), iconSize, iconSize);
+    }
   }
   /* Title */
   ctx.fillStyle = data_css.getPropertyValue("--light_grey").trim();
   ctx.font = `${headerSize}px TGPHeader, sans-serif`;
   ctx.textAlign = "left";
-  ctx.fillText(title || editor_untitled, textX, y + (headerSize * 1.5));
+  if (!isItem) {
+    ctx.fillText(title || editor_untitled, textX, y + (headerSize * 1.5));
+  }
   /* Body text */
   ctx.fillStyle = data_css.getPropertyValue("--white").trim();
   ctx.font = `${bodySize}px TGPBody, sans-serif`;
@@ -1609,32 +1617,40 @@ function export_cards_wrap_justify(ctx, text, x, y, maxWidth, lineHeight, onCard
     /* onCard = false */
   } else {
     const paragraphs = text.split("\n");
-    let lines = [];
-    for (let p = 0; p < paragraphs.length; p++) {
-      const words = paragraphs[p].split(/\s+/).filter(Boolean);
-      let lineWords = [];
-      for (let i = 0; i < words.length; i++) {
-        const testLine = [...lineWords, words[i]].join(" ");
-        if (ctx.measureText(testLine).width > maxWidth && lineWords.length > 0) {
-          lines.push({ words: lineWords, justify: true });
-          lineWords = [words[i]];
-        } else {
-          lineWords.push(words[i]);
+    /* Build wrapped lines while keeping '\n'. */
+    function buildLines(parts) {
+      const result = [];
+      for (const paragraph of parts) {
+        const words = paragraph.split(/\s+/).filter(Boolean);
+        let lineWords = [];
+        for (const word of words) {
+          const testLine = [...lineWords, word].join(" ");
+          if (
+            ctx.measureText(testLine).width > maxWidth &&
+            lineWords.length > 0
+          ) {
+            result.push({ words: lineWords, justify: true });
+            lineWords = [word];
+          } else {
+            lineWords.push(word);
+          }
+        }
+        if (lineWords.length) {
+          result.push({ words: lineWords, justify: false });
         }
       }
-      if (lineWords.length) {
-        lines.push({ words: lineWords, justify: false });
+      return result;
+    }
+    let lines = buildLines(paragraphs);
+    /* If '\n's cause the second line to be too long, try ignoring them. */
+    /* If it doesn't work we just keep the \n */
+    if (lines.length > 2 && paragraphs.length > 1) {
+      const joinedLines = buildLines([paragraphs.join(" ")]);
+      if (joinedLines.length <= 2) {
+        lines = joinedLines;
       }
     }
-    if (lines.length > 2) {
-      const first = lines[0];
-      const restWords = lines.slice(1).flatMap(l => l.words);
-      lines = [
-        first,
-        { words: restWords, justify: true }
-      ];
-    }
-    /* Really short ability text (only one line) needs to be moved up so it's still aligned with the ability icon */
+    /* Really short ability text needs to be moved up. */
     if (lines.length === 1) {
       y += lineHeight / 2;
     }
