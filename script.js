@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.21.0";
+const site_version = "0.21.1";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -990,7 +990,7 @@ async function export_sheet() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   /* Separate guests and strangers from spirits */
   /* 'Normal' roles means not spirits */
-  const normalRoles = data_roles.filter(role => (role.type || "").toLowerCase() !== "spirit");
+  const normalRoles = data_roles.filter(role => !["spirit", "item", "prompt"].includes((role.type || "").toLowerCase()));
   const spiritRoles = data_roles.filter(role => (role.type || "").toLowerCase() === "spirit");
   /* Calculate layout */
   const hasCenteredNormalRole = normalRoles.length % 2 === 1;
