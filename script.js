@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.22.0";
+const site_version = "0.23.0";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -662,6 +662,7 @@ function data_roles_edited() {
   const role = data_roles_get();
   if (!role) return;
   editor_card_render();
+  editor_enable_check();
   if (!role.is_vanilla) return;
   role.is_vanilla = false;
 }
@@ -883,7 +884,7 @@ function editor_enable_check() {
   element_single_role_ability2_icon.classList.toggle("disabled", ability2_icon_disabled || is_ability2_none);
   element_single_role_ability1_name.disabled = ability1_icon_disabled || is_ability1_none || is_item;
   element_single_role_ability2_name.disabled = ability2_icon_disabled || is_ability2_none;
-  element_single_role_toplabel.disabled = !(is_stranger || is_prompt || is_item);
+  element_single_role_toplabel.disabled = !(is_stranger || is_prompt || is_item || role.tag_friendly);
   /* Role tags */
   element_single_role_tag_friendly.disabled = is_item || is_prompt;
   element_single_role_tag_setup.disabled = is_item || is_prompt;
@@ -1219,11 +1220,11 @@ async function export_cards_render(role, s = 1) {
     const borderRadius = 120 * s;
     const iconSize = 1350 * s;
     const iconY = (canvas.height / 2) - (iconSize / 2);
-    const bodySize = ( role.tag_compact ? 110 : 120 ) * s;
+    const bodySize = (role.tag_compact ? 110 : 120) * s;
     const headerSize = 240 * s;
     const minimumSize = 167 * s;
     const headerY = (iconY / 2) + (borderDistance / 2);
-    const columnGap = ( role.tag_compact ? 30 : 40 ) * s;
+    const columnGap = (role.tag_compact ? 30 : 40) * s;
     /* Black Background */
     ctx.fillStyle = data_css.getPropertyValue("--black").trim();
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1273,12 +1274,14 @@ async function export_cards_render(role, s = 1) {
       try {
         let iconSrc = role.icon;
         if (role.format && role.icon) {
-          iconSrc = await new Promise((resolve, reject) => {
-            data_roles_format(role.icon, role.type, resolve);
-          });
+          iconSrc = await new Promise((resolve, reject) => { data_roles_format(role.icon, role.type, resolve); });
         }
         const icon = await export_cards_load_image(iconSrc);
-        ctx.drawImage(icon, paddingX, iconY, iconSize, iconSize);
+        if (role.tag_friendly === true) {
+          ctx.drawImage(icon, (canvas.width / 2) - (iconSize / 2), iconY + headerSize + (columnGap * 2), iconSize, iconSize);
+        } else {
+          ctx.drawImage(icon, paddingX, iconY, iconSize, iconSize);
+        }
       } catch (err) {
         ctx.fillStyle = data_css.getPropertyValue("--black").trim();
         ctx.fillRect(paddingX, iconY, iconSize, iconSize);
@@ -1298,15 +1301,11 @@ async function export_cards_render(role, s = 1) {
     ctx.fillStyle = roleColours[role.type] || data_css.getPropertyValue("--white").trim();
     ctx.font = `${headerSize}px TGPHeader, sans-serif`;
     ctx.textAlign = "center";
-    export_cards_rescale_centre(
-      ctx,
-      role.name,
-      paddingX + (iconSize / 2),
-      headerY,
-      iconSize,
-      headerSize,
-      minimumSize
-    );
+    if (role.tag_friendly === true) {
+      export_cards_rescale_centre(ctx, role.name, canvas.width / 2, headerY, canvas.width - (paddingX * 2), headerSize, minimumSize);
+    } else {
+      export_cards_rescale_centre(ctx, role.name, paddingX + (iconSize / 2), headerY, iconSize, headerSize, minimumSize);
+    }
     /* Activate order number */
     ctx.fillStyle = data_css.getPropertyValue("--light_grey").trim();
     ctx.font = `${headerSize}px TGPBody, sans-serif`;
@@ -1317,10 +1316,15 @@ async function export_cards_render(role, s = 1) {
     /* Top label (win condition) */
     if (role.toplabel) {
       currentY += bodySize + (columnGap * 2);
-      ctx.fillStyle = roleColours[role.type] || data_css.getPropertyValue("--white").trim();
       ctx.font = `${bodySize}px TGPBody, sans-serif`;
       ctx.textAlign = "left";
-      ctx.fillText(role.toplabel || editor_untitled, paddingX + iconSize + columnGap, currentY + (bodySize * 1.5));
+      if (role.tag_friendly === true) {
+        ctx.fillStyle = data_css.getPropertyValue("--light_grey").trim();
+        export_cards_rescale_centre(ctx, role.toplabel || editor_untitled, canvas.width / 2, headerY + headerSize + (columnGap * 2), canvas.width - (paddingX * 2), headerSize, minimumSize);
+      } else {
+        ctx.fillStyle = roleColours[role.type] || data_css.getPropertyValue("--white").trim();
+        ctx.fillText(role.toplabel || editor_untitled, paddingX + iconSize + columnGap, currentY + (bodySize * 1.5));
+      }
       currentY += bodySize + (columnGap * 3);
     }
     /* Tag icons */
@@ -1514,7 +1518,7 @@ async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y
     true
   );
   /* Return the height of this entire ability block we just rendered */
-  return iconSize/(role.tag_compact ? 2:1) + textHeight;
+  return iconSize / (role.tag_compact ? 2 : 1) + textHeight;
 }
 
 /* -------------------[ Render Role Card (Image Loading) ]------------------- */
