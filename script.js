@@ -1,6 +1,6 @@
 /* -------------------[ Site Data ]------------------- */
 /* Site version */
-const site_version = "0.21.1";
+const site_version = "0.22.0";
 
 /* Untitled text default */
 const editor_untitled = "Untitled";
@@ -72,7 +72,8 @@ const site_roles_default = {
   is_vanilla: false,
   tag_friendly: false,
   tag_setup: false,
-  tag_preserve: false
+  tag_preserve: false,
+  tag_compact: false
 };
 
 /* Role colour arrays */
@@ -187,6 +188,7 @@ const element_single_role_activate = document.getElementById("single_role_activa
 const element_single_role_tag_friendly = document.getElementById("single_role_tag_friendly");
 const element_single_role_tag_setup = document.getElementById("single_role_tag_setup");
 const element_single_role_tag_preserve = document.getElementById("single_role_tag_preserve");
+const element_single_role_tag_compact = document.getElementById("single_role_tag_compact");
 const element_single_role_format = document.getElementById("single_role_format");
 const element_single_role_delete = document.getElementById("single_role_delete");
 const element_sidebar_main = document.getElementById("sidebar_main");
@@ -686,6 +688,7 @@ function data_roles_load() {
   element_single_role_tag_friendly.checked = role.tag_friendly;
   element_single_role_tag_setup.checked = role.tag_setup;
   element_single_role_tag_preserve.checked = role.tag_preserve;
+  element_single_role_tag_compact.checked = role.tag_compact;
   element_single_role_format.classList.toggle("on", role.format);
   element_editor_marker.classList.toggle("hidden", !role?.is_vanilla);
 
@@ -842,9 +845,11 @@ function editor_enable_force() {
   element_single_role_tag_friendly.disabled = false;
   element_single_role_tag_setup.disabled = false;
   element_single_role_tag_preserve.disabled = false;
+  element_single_role_tag_compact.disabled = false;
   element_single_role_tag_friendly.classList.remove("disabled");
   element_single_role_tag_setup.classList.remove("disabled");
   element_single_role_tag_preserve.classList.remove("disabled");
+  element_single_role_tag_compact.classList.remove("disabled");
 
 }
 
@@ -883,9 +888,11 @@ function editor_enable_check() {
   element_single_role_tag_friendly.disabled = is_item || is_prompt;
   element_single_role_tag_setup.disabled = is_item || is_prompt;
   element_single_role_tag_preserve.disabled = is_item || is_prompt;
+  element_single_role_tag_compact.disabled = is_item || is_prompt;
   element_single_role_tag_friendly.classList.toggle("disabled", is_item || is_prompt);
   element_single_role_tag_setup.classList.toggle("disabled", is_item || is_prompt);
   element_single_role_tag_preserve.classList.toggle("disabled", is_item || is_prompt);
+  element_single_role_tag_compact.classList.toggle("disabled", is_item || is_prompt);
 
   /* Vanilla roles (disable EVERYTHING) */
   if (role.is_vanilla) {
@@ -907,9 +914,11 @@ function editor_enable_check() {
     element_single_role_tag_friendly.disabled = true;
     element_single_role_tag_setup.disabled = true;
     element_single_role_tag_preserve.disabled = true;
+    element_single_role_tag_compact.disabled = true;
     element_single_role_tag_friendly.classList.add("disabled");
     element_single_role_tag_setup.classList.add("disabled");
     element_single_role_tag_preserve.classList.add("disabled");
+    element_single_role_tag_compact.classList.add("disabled");
   }
 }
 
@@ -1210,11 +1219,11 @@ async function export_cards_render(role, s = 1) {
     const borderRadius = 120 * s;
     const iconSize = 1350 * s;
     const iconY = (canvas.height / 2) - (iconSize / 2);
-    const bodySize = 120 * s;
+    const bodySize = ( role.tag_compact ? 110 : 120 ) * s;
     const headerSize = 240 * s;
     const minimumSize = 167 * s;
     const headerY = (iconY / 2) + (borderDistance / 2);
-    const columnGap = 40 * s;
+    const columnGap = ( role.tag_compact ? 30 : 40 ) * s;
     /* Black Background */
     ctx.fillStyle = data_css.getPropertyValue("--black").trim();
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1505,7 +1514,7 @@ async function export_cards_render_ability(ctx, role, iconKey, title, text, x, y
     true
   );
   /* Return the height of this entire ability block we just rendered */
-  return iconSize + textHeight + (gap * 3);
+  return iconSize/(role.tag_compact ? 2:1) + textHeight;
 }
 
 /* -------------------[ Render Role Card (Image Loading) ]------------------- */
@@ -2041,6 +2050,14 @@ element_single_role_tag_preserve.addEventListener("change", function () {
   if (!role) return;
   data_history_push();
   role.tag_preserve = this.checked;
+  data_roles_edited();
+  editor_unsaved();
+});
+element_single_role_tag_compact.addEventListener("change", function () {
+  const role = data_roles_get();
+  if (!role) return;
+  data_history_push();
+  role.tag_compact = this.checked;
   data_roles_edited();
   editor_unsaved();
 });
